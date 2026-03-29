@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DirectoryService.Application/DirectoryService.Application.csproj" />
+    <Project Path="src/DirectoryService.Contracts/DirectoryService.Contracts.csproj" />
+    <Project Path="src/DirectoryService.Domain/DirectoryService.Domain.csproj" />
+    <Project Path="src/DirectoryService.Infrastructure/DirectoryService.Infrastructure.csproj" />
+    <Project Path="src/DirectoryService.Presentation/DirectoryService.Presentation.csproj" />
+  </Folder>
+</Solution>
