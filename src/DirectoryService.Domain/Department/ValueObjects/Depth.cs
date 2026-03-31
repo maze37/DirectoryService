@@ -5,7 +5,7 @@ namespace DirectoryService.Domain.Department.ValueObjects;
 
 public class Depth : ValueObject
 {
-    public short Value { get; private set; }
+    public short Value { get; }
 
     private Depth(short value)
     {
