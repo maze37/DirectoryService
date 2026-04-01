@@ -64,7 +64,12 @@ public class Location : AggregateRoot
     public static Result<Location> Create(
         Guid id,
         string name,
-        string address,
+        string country,
+        string city,
+        string street,
+        string building,
+        string? office,
+        string? postalCode,
         string timezone,
         bool isActive,
         DateTimeOffset createdWhen)
@@ -76,7 +81,7 @@ public class Location : AggregateRoot
         if (nameResult.IsFailure)
             return Result.Failure<Location>(nameResult.Error);
             
-        var addressResult = Address.Create(address);
+        var addressResult = Address.Create(country, city, street, building, office, postalCode);
         if (addressResult.IsFailure)
             return Result.Failure<Location>(addressResult.Error);
             
