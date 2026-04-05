@@ -17,7 +17,7 @@ public class Position : AggregateRoot
     /// <summary>
     /// Описание должности. Необязательное поле, максимум 1000 символов.
     /// </summary>
-    public Description? Description { get; private set; }
+    public string? Description { get; private set; }
     
     /// <summary>
     /// Флаг активности должности (soft delete).
@@ -40,7 +40,7 @@ public class Position : AggregateRoot
     private Position(
         Guid id,
         PositionName name,
-        Description? description,
+        string? description,
         bool isActive,
         DateTimeOffset createdWhen) : base(id)
     {
@@ -65,14 +65,14 @@ public class Position : AggregateRoot
         if (nameResult.IsFailure)
             return Result.Failure<Position>(nameResult.Error);
             
-        var descriptionResult = Description.Create(description);
-        if (descriptionResult.IsFailure)
-            return Result.Failure<Position>(descriptionResult.Error);
+        var desc = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        if (desc?.Length > LenghtConstants.MAXLENGHT)
+            return Result.Failure<Position>("Описание не может быть больше 1000 символов.");
             
         return Result.Success(new Position(
             id,
             nameResult.Value,
-            descriptionResult.Value,
+            desc,
             isActive,
             createdWhen));
     }
