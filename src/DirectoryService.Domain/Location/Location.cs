@@ -71,7 +71,6 @@ public class Location : AggregateRoot
         string? office,
         string? postalCode,
         string timezone,
-        bool isActive,
         DateTimeOffset createdWhen)
     {
         if (id == Guid.Empty)
@@ -94,7 +93,7 @@ public class Location : AggregateRoot
             nameResult.Value,
             addressResult.Value,
             timezoneResult.Value,
-            isActive,
+            isActive: true,
             createdWhen));
     }
 }
