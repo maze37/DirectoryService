@@ -1,5 +1,5 @@
 ﻿using DirectoryService.Application.UseCases.LocationCases.CreateLocation;
-using DirectoryService.Contracts.Location;
+using DirectoryService.Contracts.LocationContracts;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Core;
 
