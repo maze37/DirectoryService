@@ -1,5 +1,4 @@
 using DirectoryService.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
