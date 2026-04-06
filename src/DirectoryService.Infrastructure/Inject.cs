@@ -1,3 +1,5 @@
+using DirectoryService.Application.Abstractions;
+using DirectoryService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +22,12 @@ public static class Inject
             options.UseNpgsql(connectionString);
             options.UseLoggerFactory(loggerFactory);
         });
+        
+        services.AddScoped<IDateTimeProvider, DateTimeProvider>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
+        // Репозитории
+        services.AddScoped<ILocationRepository, LocationRepository>();
         
         return services;
     }
