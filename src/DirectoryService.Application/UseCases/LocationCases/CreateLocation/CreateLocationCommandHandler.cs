@@ -1,5 +1,5 @@
 using DirectoryService.Application.Abstractions;
-using DirectoryService.Contracts.Location;
+using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
 using Shared.Core;
 using Shared.Result;

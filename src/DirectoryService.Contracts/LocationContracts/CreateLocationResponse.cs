@@ -1,3 +1,3 @@
-namespace DirectoryService.Contracts.Location;
+namespace DirectoryService.Contracts.LocationContracts;
 
 public record CreateLocationResponse(Guid Id);
