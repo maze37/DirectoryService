@@ -23,12 +23,7 @@ public class LocationControllers : ControllerBase
     {
         var command = new CreateLocationCommand(
             location.Name, 
-            location.Address.Country,
-            location.Address.City,
-            location.Address.Street,
-            location.Address.Building,
-            location.Address.Office,
-            location.Address.PostalCode,
+            location.Address,
             location.Timezone);
 
         var result = await _createHandler.HandleAsync(command, cancellationToken);

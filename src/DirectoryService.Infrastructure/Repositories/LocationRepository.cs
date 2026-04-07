@@ -16,13 +16,6 @@ public class LocationRepository : ILocationRepository
         Location location, 
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            await _context.Locations.AddAsync(location, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Ошибка в доменном слое {ex.Message}");
-        }
+        await _context.Locations.AddAsync(location, cancellationToken);
     }
 }
