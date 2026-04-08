@@ -1,10 +1,10 @@
-using DirectoryService.Infrastructure;
+using DirectoryService.Presentation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.ConfigureApp(builder.Configuration);
 
 var app = builder.Build();
 
@@ -17,4 +17,5 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapControllers();
 app.Run();

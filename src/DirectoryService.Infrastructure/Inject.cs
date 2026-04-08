@@ -1,3 +1,5 @@
+using DirectoryService.Application.Abstractions;
+using DirectoryService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,8 +9,7 @@ namespace DirectoryService.Infrastructure;
 
 public static class Inject
 {
-    public static IServiceCollection AddInfrastructure
-    (
+    public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
     {
@@ -20,6 +21,12 @@ public static class Inject
             options.UseNpgsql(connectionString);
             options.UseLoggerFactory(loggerFactory);
         });
+        
+        services.AddScoped<IDateTimeProvider, DateTimeProvider>();
+        services.AddScoped<IUnitOfWork, TransactionManager>();
+        
+        // Репозитории
+        services.AddScoped<ILocationRepository, LocationRepository>();
         
         return services;
     }
