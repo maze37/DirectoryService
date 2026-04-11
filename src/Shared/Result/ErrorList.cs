@@ -21,12 +21,9 @@ public class ErrorList : IEnumerable<Error>
         return GetEnumerator();
     }
     
-#pragma warning disable CA1002, CA2225
     public static implicit operator ErrorList(List<Error> errors)
         => new(errors);
     
     public static implicit operator ErrorList(Error error)
         => new([error]);
-    
-#pragma warning restore CA1002, CA2225
 }

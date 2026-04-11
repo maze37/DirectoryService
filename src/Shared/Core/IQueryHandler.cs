@@ -16,5 +16,5 @@ public interface IQueryHandler<in TQuery, TResponse>
     /// <param name="query">Запрос</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns>Результат с данными</returns>
-    Task<Result<TResponse>> HandleAsync(TQuery query, CancellationToken cancellationToken = default);
+    Task<CSharpFunctionalExtensions.Result<TResponse>> HandleAsync(TQuery query, CancellationToken cancellationToken = default);
 }

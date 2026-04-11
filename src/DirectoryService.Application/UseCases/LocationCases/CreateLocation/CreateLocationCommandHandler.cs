@@ -1,3 +1,4 @@
+using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
@@ -39,13 +40,13 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
             _date.UtcNow);
 
         if (location.IsFailure)
-            return Result<CreateLocationResponse>.Failure(Error.Failure("Доменная ошибка от Location.Create()."));
+            return Result.Failure<CreateLocationResponse>("Доменная ошибка от Location.Create().");
         
         await _locationRepository.AddAsync(location.Value, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         
         var response = new CreateLocationResponse(location.Value.Id);
 
-        return Result<CreateLocationResponse>.Success(response);
+        return Result.Success(response);
     }
 }

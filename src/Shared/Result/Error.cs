@@ -1,38 +1,41 @@
-using System.Globalization;
+using Shared.Result;
 
-namespace Shared.Result;
-
-#pragma warning disable CA1716
-public class Error
-#pragma warning restore CA1716
+public record Error
 {
-    private const string separator = "||";
+    public static Error None = new Error(string.Empty, string.Empty, ErrorType.None, null);
+    
+    public const string SEPARATOR = "||";
 
-    public static readonly Error None = new(string.Empty, string.Empty, ErrorType.None);
-
-    public string ErrorCode { get; }
-    public string ErrorMessage { get; }
+    public string Code { get; }
+    public string Message { get; }
     public ErrorType Type { get; }
     public string? InvalidField { get; }
 
-    private Error(string errorCode, string errorMessage, ErrorType type, string? invalidField = null)
+    private Error(string code, string message, ErrorType type, string? invalidField = null)
     {
-        ErrorCode = errorCode;
-        ErrorMessage = errorMessage;
+        Code = code;
+        Message = message;
         Type = type;
         InvalidField = invalidField;
     }
+    
+    public static Error Validation(string code, string message, string? invalidField = null) =>
+        new(code, message, ErrorType.Validation, invalidField);
+
+    public static Error NotFound(string code, string message) => new(code, message, ErrorType.NotFound);
+
+    public static Error Failure(string code, string message) => new(code, message, ErrorType.Failure);
+
+    public static Error Conflict(string code, string message) => new(code, message, ErrorType.Conflict);
 
     public string Serialize()
     {
-        return string.Join(separator, ErrorCode, ErrorMessage, Type);
+        return string.Join(SEPARATOR, Code, Message, Type);
     }
 
     public static Error Deserialize(string serialized)
     {
-        _ = serialized ?? throw new ArgumentNullException(nameof(serialized));
-
-        var parts = serialized.Split(separator);
+        var parts = serialized.Split(SEPARATOR);
 
         if (parts.Length < 3)
         {
@@ -46,33 +49,8 @@ public class Error
 
         return new Error(parts[0], parts[1], type);
     }
-    
-#pragma warning disable CA1305
-    public static Error Validation(string errorMessage, string? invalidField = null) =>
-        new(ErrorCodes.ValidationError.ToString(), errorMessage, ErrorType.Validation, invalidField);
-    
-    public static Error Failure(string errorMessage) =>
-        new(ErrorCodes.InternalServerError.ToString(), errorMessage, ErrorType.Failure);
-    
-    public static Error NotFound(string errorMessage) =>
-        new(ErrorCodes.NotFound.ToString(CultureInfo.InvariantCulture), errorMessage, ErrorType.NotFound);
-    
-    public static Error Forbidden(string errorMessage) =>
-        new(ErrorCodes.Forbidden.ToString(CultureInfo.InvariantCulture), errorMessage, ErrorType.Forbidden);
-
-    public static Error Conflict(string errorMessage) =>
-        new(ErrorCodes.Conflict.ToString(), errorMessage, ErrorType.Conflict);
-    
-    public static Error Null(string errorMessage, string? invalidField = null) =>
-        new(ErrorCodes.NotFound.ToString(), errorMessage, ErrorType.Null, invalidField);
-#pragma warning restore CA1305
 
     public ErrorList ToErrorList() => new([this]);
-
-    public override string ToString()
-    {
-        return $"ErrorCode: {ErrorCode}.\nErrorMessage:{ErrorMessage}\n{Type}";
-    }
 }
 
 public enum ErrorType
@@ -80,8 +58,6 @@ public enum ErrorType
     None,
     Validation,
     NotFound,
-    Forbidden,
     Failure,
-    Null,
     Conflict
 }
