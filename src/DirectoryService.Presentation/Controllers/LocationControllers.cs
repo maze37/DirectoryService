@@ -35,7 +35,7 @@ public class LocationControllers : ControllerBase
         var result = await _createHandler.HandleAsync(command, cancellationToken);
 
         if (result.IsFailure)
-            return BadRequest(Envelope.Error(Error.Failure("failure", result.Error)));
+            return result.Error.ToResponse();
 
         return Ok(Envelope.Ok(result.Value));
     }

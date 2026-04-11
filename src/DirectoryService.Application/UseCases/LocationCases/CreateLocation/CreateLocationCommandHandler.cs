@@ -23,7 +23,7 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
-    public async Task<Result<CreateLocationResponse>> HandleAsync(
+    public async Task<Result<CreateLocationResponse, Error>> HandleAsync(
         CreateLocationCommand command,
         CancellationToken cancellationToken)
     {
@@ -40,13 +40,11 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
             _date.UtcNow);
 
         if (location.IsFailure)
-            return Result.Failure<CreateLocationResponse>("Доменная ошибка от Location.Create().");
-        
+            return Errors.General.ValueIsInvalid(location.Error);
+
         await _locationRepository.AddAsync(location.Value, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        
-        var response = new CreateLocationResponse(location.Value.Id);
 
-        return Result.Success(response);
+        return new CreateLocationResponse(location.Value.Id);
     }
 }
