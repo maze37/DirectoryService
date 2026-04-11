@@ -1,3 +1,4 @@
+using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
@@ -23,7 +24,7 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
-    public async Task<Result<CreateLocationResponse>> HandleAsync(
+    public async Task<Result<CreateLocationResponse, Error>> HandleAsync(
         CreateLocationCommand command,
         CancellationToken cancellationToken)
     {
@@ -52,15 +53,12 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
             timezoneResult.Value,
             _date.UtcNow);
 
-        if (locationResult.IsFailure)
-            return Result<CreateLocationResponse>.Failure(
-                Error.Failure(locationResult.Error));
-        
-        await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
+        if (location.IsFailure)
+            return Errors.General.ValueIsInvalid(location.Error);
+
+        await _locationRepository.AddAsync(location.Value, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        
-        var response = new CreateLocationResponse(locationResult.Value.Id);
-        
-        return Result<CreateLocationResponse>.Success(response);
+
+        return new CreateLocationResponse(location.Value.Id);
     }
 }

@@ -1,5 +1,3 @@
-using Shared.Result; 
-
 namespace Shared.Core;
 
 /// <summary>
@@ -10,7 +8,9 @@ namespace Shared.Core;
 public interface ICommandHandler<in TCommand, TResponse> 
     where TCommand : ICommand
 {
-    Task<Result<TResponse>> HandleAsync(TCommand command, CancellationToken cancellationToken = default);
+    Task<CSharpFunctionalExtensions.Result<TResponse, Error>> HandleAsync(
+        TCommand command, 
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -20,5 +20,7 @@ public interface ICommandHandler<in TCommand, TResponse>
 public interface ICommandHandler<in TCommand> 
     where TCommand : ICommand
 {
-    Task<Result.Result> HandleAsync(TCommand command, CancellationToken cancellationToken = default);
+    Task<CSharpFunctionalExtensions.Result> HandleAsync(
+        TCommand command, 
+        CancellationToken cancellationToken = default);
 }

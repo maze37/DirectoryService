@@ -1,5 +1,6 @@
 ﻿using DirectoryService.Application.UseCases.LocationCases.CreateLocation;
 using DirectoryService.Contracts.LocationContracts;
+using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Core;
 
@@ -27,10 +28,10 @@ public class LocationControllers : ControllerBase
             location.Timezone);
 
         var result = await _createHandler.HandleAsync(command, cancellationToken);
-        
+
         if (result.IsFailure)
-            return BadRequest(result.Errors);
-        
-        return Ok(result.Value);
+            return result.Error.ToResponse();
+
+        return Ok(Envelope.Ok(result.Value));
     }
 }
