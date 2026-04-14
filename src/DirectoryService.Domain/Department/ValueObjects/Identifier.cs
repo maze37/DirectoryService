@@ -1,12 +1,14 @@
+using System.Text.RegularExpressions;
 using CSharpFunctionalExtensions;
+using Shared.Result;
 using ValueObject = Shared.Base.ValueObject;
 
 namespace DirectoryService.Domain.Department.ValueObjects;
 
 public class Identifier : ValueObject
 {
-    public const int MinLenght = 3;
-    public const int MaxLenght = 150;
+    public const int IDENTIFIER_MIN_LENGTH = 3;
+    public const int IDENTIFIER_MAX_LENGTH = 150;
     
     public string Value { get; }
     
@@ -15,24 +17,24 @@ public class Identifier : ValueObject
         Value = value;
     }
 
-    public static Result<Identifier> Create(string value)
+    public static Result<Identifier, Error> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Result.Failure<Identifier>("Путь не может быть пустым.");
-        
-        if (value.Length < MinLenght)
-            return Result.Failure<Identifier>("Путь названия не может быть меньше 3.");
-
-        if (value.Length > MaxLenght)
-            return Result.Failure<Identifier>("Путь названия не может быть больше 150.");
-
-        foreach (var c in value)
         {
-            if (!char.IsAsciiLetter(c))
-                return Result.Failure<Identifier>("В пути могут быть только латинские буквы.");
+            return GeneralErrors.ValueIsRequired("department identifier");
         }
         
-        return Result.Success(new Identifier(value));
+        if (value.Length is > IDENTIFIER_MAX_LENGTH or < IDENTIFIER_MIN_LENGTH)
+        {
+            return GeneralErrors.ValueIsInvalid("department identifier", "Identifier must be between 3 and 150 characters");
+        }
+
+        if (!Regex.IsMatch(value, @"^[a-zA-Z]*$"))
+        {
+            return GeneralErrors.ValueIsInvalid("department identifier", "Identifier must be in Latin characters");
+        }
+
+        return new Identifier(value);
     }
 
     protected override IEnumerable<object> GetEqualityComponents()

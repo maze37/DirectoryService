@@ -1,12 +1,13 @@
 using CSharpFunctionalExtensions;
+using Shared.Result;
 using ValueObject = Shared.Base.ValueObject;
 
 namespace DirectoryService.Domain.Position.ValueObjects;
 
 public class PositionName : ValueObject
 {
-    public const int MinLength = 3;
-    public const int MaxLength = 100;
+    public const int MIN_NAME_LENGTH = 3;
+    public const int MAX_NAME_LENGHT = 100;
     
     public string Value { get; }
     
@@ -15,18 +16,18 @@ public class PositionName : ValueObject
         Value = value;
     }
 
-    public static Result<PositionName> Create(string value)
+    public static Result<PositionName, Error> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Result.Failure<PositionName>("Название позиции не может быть пустым.");
+            return GeneralErrors.ValueIsInvalid("value", "Название позиции не может быть пустым.");
 
-        if (value.Length < MinLength)
-            return Result.Failure<PositionName>($"Название позиции не может быть меньше {MinLength} символов.");
+        if (value.Length < MIN_NAME_LENGTH)
+            return GeneralErrors.ValueIsInvalid("value.Lenght",$"Название позиции не может быть меньше {MIN_NAME_LENGTH} символов.");
 
-        if (value.Length > MaxLength)
-            return Result.Failure<PositionName>($"Название позиции не может быть больше {MaxLength} символов.");
-        
-        return Result.Success(new PositionName(value));
+        if (value.Length > MAX_NAME_LENGHT)
+            return GeneralErrors.ValueIsInvalid("value.Lenght", $"Название позиции не может быть больше {MAX_NAME_LENGHT} символов.");
+
+        return new PositionName(value);
     }
     
     protected override IEnumerable<object> GetEqualityComponents()

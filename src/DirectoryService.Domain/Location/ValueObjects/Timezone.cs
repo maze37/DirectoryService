@@ -1,4 +1,5 @@
 using CSharpFunctionalExtensions;
+using Shared.Result;
 using ValueObject = Shared.Base.ValueObject;
 
 namespace DirectoryService.Domain.Location.ValueObjects;
@@ -12,24 +13,23 @@ public class Timezone : ValueObject
         Value = value;
     }
 
-    public static Result<Timezone> Create(string value)
+    public static Result<Timezone, Error> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Result.Failure<Timezone>("Часовой пояс не может быть пустым.");
+            return GeneralErrors.ValueIsRequired("timezone");
 
         try
         {
             var timeZone = TimeZoneInfo.FindSystemTimeZoneById(value);
-            
-            return Result.Success(new Timezone(value));
+            return new Timezone(value);
         }
         catch (TimeZoneNotFoundException)
         {
-            return Result.Failure<Timezone>($"Часовой пояс '{value}' не найден. Используйте IANA код, например: Europe/Moscow");
+            return GeneralErrors.ValueIsInvalid("timezone", $"Часовой пояс '{value}' не найден. Используйте IANA код, например: Europe/Moscow");
         }
         catch (InvalidTimeZoneException)
         {
-            return Result.Failure<Timezone>($"Часовой пояс '{value}' имеет некорректный формат.");
+            return GeneralErrors.ValueIsInvalid("timezone", $"Часовой пояс '{value}' имеет некорректный формат.");
         }
     }
     

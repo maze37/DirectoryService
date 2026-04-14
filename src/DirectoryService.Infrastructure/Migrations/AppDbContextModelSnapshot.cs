@@ -83,7 +83,7 @@ namespace DirectoryService.Infrastructure.Migrations
                                 .HasColumnName("name");
                         });
 
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "Path", "DirectoryService.Domain.Department.Department.Path#PathVO", b1 =>
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Path", "DirectoryService.Domain.Department.Department.Path#Path", b1 =>
                         {
                             b1.IsRequired();
 
@@ -103,7 +103,7 @@ namespace DirectoryService.Infrastructure.Migrations
                     b.ToTable("departments", (string)null);
                 });
 
-            modelBuilder.Entity("DirectoryService.Domain.DepartmentLocations", b =>
+            modelBuilder.Entity("DirectoryService.Domain.DepartmentLocation", b =>
                 {
                     b.Property<Guid>("DepartmentId")
                         .HasColumnType("uuid")
@@ -120,7 +120,7 @@ namespace DirectoryService.Infrastructure.Migrations
                     b.ToTable("department_locations", (string)null);
                 });
 
-            modelBuilder.Entity("DirectoryService.Domain.DepartmentPositions", b =>
+            modelBuilder.Entity("DirectoryService.Domain.DepartmentPosition", b =>
                 {
                     b.Property<Guid>("DepartmentId")
                         .HasColumnType("uuid")
@@ -282,7 +282,7 @@ namespace DirectoryService.Infrastructure.Migrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("DirectoryService.Domain.DepartmentLocations", b =>
+            modelBuilder.Entity("DirectoryService.Domain.DepartmentLocation", b =>
                 {
                     b.HasOne("DirectoryService.Domain.Department.Department", null)
                         .WithMany("Locations")
@@ -299,7 +299,7 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasConstraintName("fk_department_locations_location");
                 });
 
-            modelBuilder.Entity("DirectoryService.Domain.DepartmentPositions", b =>
+            modelBuilder.Entity("DirectoryService.Domain.DepartmentPosition", b =>
                 {
                     b.HasOne("DirectoryService.Domain.Department.Department", null)
                         .WithMany("Positions")

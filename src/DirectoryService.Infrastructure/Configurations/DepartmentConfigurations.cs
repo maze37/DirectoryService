@@ -17,7 +17,7 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         
         builder.ComplexProperty(d => d.Name, nameBuilder =>
         {
-            nameBuilder.Property<string>("Value")
+            nameBuilder.Property<string>(n => n.Value)
                 .HasColumnName("name")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
@@ -25,7 +25,7 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         
         builder.ComplexProperty(d => d.Identifier, idBuilder =>
         {
-            idBuilder.Property<string>("Value")
+            idBuilder.Property<string>(n => n.Value)
                 .HasColumnName("identifier")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
@@ -33,28 +33,28 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         
         builder.ComplexProperty(d => d.Path, pathBuilder =>
         {
-            pathBuilder.Property<string>("Value")
+            pathBuilder.Property<string>(n => n.Value)
                 .HasColumnName("path")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
         });
         
-        builder.ComplexProperty(d => d.Depth, depthBuilder =>
-        {
-            depthBuilder.Property<short>("Value")
-                .HasColumnName("depth")
-                .IsRequired();
-        });
+        builder.Property(c => c.ChildrenCount)
+            .HasColumnName("children_count")
+            .IsRequired();
+        
+        builder.Property(d => d.Depth)
+            .HasColumnName("depth")
+            .IsRequired();
         
         builder.Property(d => d.ParentId)
             .HasColumnName("parent_id")
             .IsRequired(false);
-        
+
         builder.HasOne<Department>()
             .WithMany(d => d.Children)
             .HasForeignKey(d => d.ParentId)
-            .HasConstraintName("fk_departments_parent")
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasConstraintName("fk_departments_parent");
         
         builder.Property(d => d.IsActive)
             .HasColumnName("is_active")
@@ -67,17 +67,13 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         builder.Property(d => d.UpdatedWhen)
             .HasColumnName("updated_when")
             .IsRequired();
-        
+
         builder.HasMany(d => d.Locations)
             .WithOne()
-            .HasForeignKey("DepartmentId")
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
-        
+            .HasForeignKey(n => n.DepartmentId);
+
         builder.HasMany(d => d.Positions)
             .WithOne()
-            .HasForeignKey("DepartmentId")
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey(n => n.DepartmentId);
     }
 }

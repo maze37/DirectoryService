@@ -27,7 +27,7 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         CreateLocationCommand command,
         CancellationToken cancellationToken)
     {
-        var location = Location.Create(
+        var locationResult = Location.Create(
             Guid.NewGuid(),
             command.Name,
             command.Country,
@@ -39,12 +39,12 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
             command.Timezone,
             _date.UtcNow);
 
-        if (location.IsFailure)
-            return Errors.General.ValueIsInvalid(location.Error);
+        if (locationResult.IsFailure)
+            return Errors.General.ValueIsInvalid("locationResult.Error");
 
-        await _locationRepository.AddAsync(location.Value, cancellationToken);
+        await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CreateLocationResponse(location.Value.Id);
+        return new CreateLocationResponse(locationResult.Value.Id);
     }
 }

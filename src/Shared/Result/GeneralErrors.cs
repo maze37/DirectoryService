@@ -7,4 +7,10 @@ public static class GeneralErrors
         var label = field ?? "value";
         return Error.Validation($"{label} is invalid", $"{message}", $"{field}");
     }
+
+    public static Error ValueIsRequired(string? field)
+    {
+        var label = field ?? "value";
+        return Error.Validation($"{label} is required", $"{field}");
+    }
 }

@@ -1,22 +1,25 @@
 using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Department.ValueObjects;
+using DirectoryService.Domain.DepartmentLocations;
+using DirectoryService.Domain.DepartmentPositions;
 using Shared.Base;
+using Shared.Result;
+using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
 namespace DirectoryService.Domain.Department;
 
 /// <summary>
 /// Отдел в компании (отдел разработки, отдел продаж)
 /// </summary>
-public class Department : AggregateRoot
+public sealed class Department : AggregateRoot
 {
-    private readonly List<DepartmentLocations> _locations = [];
-    private readonly List<DepartmentPositions> _positions = [];
     private readonly List<Department> _children  = [];
+    private readonly List<DepartmentLocation> _departmentLocations = [];
+    private readonly List<DepartmentPosition> _departmentPositions = [];
     
-    public IReadOnlyList<DepartmentLocations> Locations => _locations.AsReadOnly();
-    public IReadOnlyList<DepartmentPositions> Positions => _positions.AsReadOnly();
+    public IReadOnlyList<DepartmentLocation> Locations => _departmentLocations.AsReadOnly();
+    public IReadOnlyList<DepartmentPosition> Positions => _departmentPositions.AsReadOnly();
     public IReadOnlyList<Department> Children => _children.AsReadOnly();
-    public Department? Parent { get; private set; }
     
     /// <summary>
     /// Название отдела.
@@ -24,7 +27,7 @@ public class Department : AggregateRoot
     public Name Name { get; private set; }
     
     /// <summary>
-    /// 
+    /// Идентификатор отдела.
     /// </summary>
     public Identifier Identifier { get; private set; }
     
@@ -36,12 +39,22 @@ public class Department : AggregateRoot
     /// <summary>
     /// Путь 
     /// </summary>
-    public PathVO Path { get; private set; }
+    public Path Path { get; private set; }
     
     /// <summary>
     /// Гоубина подразделения
     /// </summary>
-    public Depth Depth { get; private set; }
+    public int Depth { get; private set; }
+
+    /// <summary>
+    /// Количество детей отдела
+    /// </summary>
+    public int ChildrenCount { get; private set; }
+    
+    /// <summary>
+    /// Указатель на родителя
+    /// </summary>
+    public Department? Parent { get; private set; }
     
     /// <summary>
     /// Активен ли отдел. (Флаг)
@@ -60,63 +73,64 @@ public class Department : AggregateRoot
     
     private Department() : base(Guid.Empty) { }
 
-    private Department(
+    public Department(
         Guid id,
         Name name,
         Identifier identifier,
         Guid? parentId,
-        PathVO path, 
-        Depth depth,
-        bool isActive,
-        DateTimeOffset createdWhen) :base(id)
+        Path path,
+        int depth,
+        Department? parent,
+        DateTimeOffset createdWhen,
+        List<Department> children,
+        IEnumerable<DepartmentLocation> departmentLocations,
+        IEnumerable<DepartmentPosition> departmentPositions) : base(id)
     {
         Name = name;
         Identifier = identifier;
         ParentId = parentId;
         Path = path;
         Depth = depth;
-        IsActive = isActive;
+        ChildrenCount = children.Count();
+        IsActive = true;
         CreatedWhen = createdWhen;
         UpdatedWhen = createdWhen;
+        Parent = parent;
+        _children = children;
+        _departmentLocations = departmentLocations.ToList();
+        _departmentPositions = departmentPositions.ToList();
     }
 
-    public static Result<Department> Create(
+    public static Result<Department, Error> CreateRoot(
         Guid id,
         string name,
         string identifier,
-        Guid? parentId,
-        string path,
-        short depth,
-        bool isActive,
         DateTimeOffset createdWhen)
     {
         if (id == Guid.Empty)
-            return Result.Failure<Department>("ID отдела не может быть пустым.");
+            return GeneralErrors.ValueIsInvalid("id", "ID не может быть пустым");
         
         var nameResult = Name.Create(name);
         if (nameResult.IsFailure)
-            return Result.Failure<Department>(nameResult.Error);
-            
+            return nameResult.Error;
+
         var identifierResult = Identifier.Create(identifier);
         if (identifierResult.IsFailure)
-            return Result.Failure<Department>(identifierResult.Error);
-            
-        var pathResult = PathVO.Create(path);
-        if (pathResult.IsFailure)
-            return Result.Failure<Department>(pathResult.Error);
-            
-        var depthResult = Depth.Create(depth);
-        if (depthResult.IsFailure)
-            return Result.Failure<Department>(depthResult.Error);
+            return identifierResult.Error;
+        
+        var path = Path.CreateParent(identifierResult.Value);
 
-        return Result.Success(new Department(
+        return new Department(
             id,
             nameResult.Value,
             identifierResult.Value,
-            parentId,
-            pathResult.Value,
-            depthResult.Value,
-            isActive,
-            createdWhen));
+            parentId: null,
+            path,
+            depth: 0,
+            parent: null,
+            createdWhen,
+            children: [],
+            departmentLocations: new List<DepartmentLocation>(),
+            departmentPositions: new List<DepartmentPosition>());
     }
 }
