@@ -11,38 +11,11 @@ namespace DirectoryService.Domain.Location;
 /// </summary>
 public sealed class Location : AggregateRoot
 {
-    /// <summary>
-    /// Название локации. Уникальное, от 3 до 120 символов.
-    /// Пример: "Главный офис Москва", "БЦ Москва-Сити"
-    /// </summary>
     public LocationName Name { get; private set; }
-    
-    /// <summary>
-    /// Физический адрес локации.
-    /// Может быть строкой или структурированным объектом (страна, город, улица и т.д.)
-    /// </summary>
     public Address Address { get; private set; }
-    
-    /// <summary>
-    /// Часовой пояс локации в формате IANA.
-    /// Пример: "Europe/Moscow", "Asia/Tokyo", "America/New_York"
-    /// </summary>
     public Timezone Timezone { get; private set; }
-    
-    /// <summary>
-    /// Флаг активности локации (soft delete).
-    /// false - локация помечена как удаленная
-    /// </summary>
     public bool IsActive { get; private set; }
-    
-    /// <summary>
-    /// Дата и время создания записи в UTC.
-    /// </summary>
     public DateTimeOffset CreatedWhen { get; private set; }
-    
-    /// <summary>
-    /// Дата и время последнего обновления записи в UTC.
-    /// </summary>
     public DateTimeOffset UpdatedWhen { get; private set; }
     
     /// <summary>
@@ -70,14 +43,9 @@ public sealed class Location : AggregateRoot
     
     public static Result<Location, Error> Create(
         Guid id,
-        string name,
-        string country,
-        string city,
-        string street,
-        string building,
-        string? office,
-        string? postalCode,
-        string timezone,
+        LocationName name,
+        Address address,
+        Timezone timezone,
         DateTimeOffset createdWhen)
     {
         if (id == Guid.Empty)

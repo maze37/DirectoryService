@@ -2,6 +2,7 @@ using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
+using DirectoryService.Domain.Location.ValueObjects;
 using Shared.Core;
 using Shared.Result;
 
@@ -29,14 +30,9 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
     {
         var locationResult = Location.Create(
             Guid.NewGuid(),
-            command.Name,
-            command.Country,
-            command.City,
-            command.Street,
-            command.Building,
-            command.Office,
-            command.PostalCode,
-            command.Timezone,
+            nameResult.Value,
+            addressResult.Value,
+            timezoneResult.Value,
             _date.UtcNow);
 
         if (locationResult.IsFailure)
