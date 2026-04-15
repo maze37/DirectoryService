@@ -13,9 +13,9 @@ public static class Inject
         services
             .AddSerilogLogging(configuration)
             .AddInfrastructure(configuration)
-            .AddApplication();
-
-        services
+            .AddApplication()
+            .AddSwaggerGen()
+            .AddEndpointsApiExplorer()
             .AddControllers();
 
         return services;

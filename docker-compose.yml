@@ -18,11 +18,28 @@
       restart: unless-stopped
       environment:
         - ACCEPT_EULA=Y
+        - SEQ_FIRSTRUN_ADMINPASSWORD=admin123
       ports:
         - "5341:80"
       volumes:
-        - ./seq-data:/data
+        - seq-data:/data
+    
+    directory-service:
+      build:
+        context: .
+        dockerfile: src/DirectoryService.Presentation/Dockerfile
+      container_name: directory-service
+      restart: always
+      ports:
+        - "5001:8080"
+      environment:
+        ASPNETCORE_ENVIRONMENT: Development
+        ConnectionStrings__DirectoryServiceDb: "Host=postgres;Port=5432;Database=directory_service_db;Username=postgres;Password=1234"
+        Serilog__WriteTo__1__Args__serverUrl: "http://seq:80"
+      depends_on:
+        - postgres
+        - seq
       
 volumes:
   postgres-data:
-  ./seq-data:
+  seq-data:

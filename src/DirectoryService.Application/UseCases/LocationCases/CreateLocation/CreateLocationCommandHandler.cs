@@ -39,7 +39,7 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         if (locationResult.IsFailure)
             return Errors.General.ValueIsInvalid("locationResult.Error");
         
-        Log.Information("Локация с ID: {LocationId} и с названием: {LocationName} успешно создана", locationResult.Value.Id, locationResult.Value.Name);
+        Log.Information("Локация с названием: {} успешно создана", locationResult.Value.Name);
 
         await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
