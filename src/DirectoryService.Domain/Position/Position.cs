@@ -1,13 +1,15 @@
 using CSharpFunctionalExtensions;
+using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Position.ValueObjects;
 using Shared.Base;
+using Shared.Result;
 
 namespace DirectoryService.Domain.Position;
 
 /// <summary>
 /// Должности сотрудников
 /// </summary>
-public class Position : AggregateRoot
+public sealed class Position : AggregateRoot
 {
     /// <summary>
     /// Название должности. Уникальное, от 3 до 100 символов.
@@ -35,45 +37,48 @@ public class Position : AggregateRoot
     /// </summary>
     public DateTimeOffset UpdatedWhen { get; private set; }
     
+    /// <summary>
+    /// Для связи м-м
+    /// </summary>
+    public IReadOnlyList<DepartmentPosition> DepartmentPosition { get; private set; }
+    
+    // EF Core
     private Position() : base(Guid.Empty) { }
     
     private Position(
         Guid id,
         PositionName name,
         string? description,
-        bool isActive,
         DateTimeOffset createdWhen) : base(id)
     {
         Name = name;
         Description = description;
-        IsActive = isActive;
+        IsActive = true;
         CreatedWhen = createdWhen;
         UpdatedWhen = createdWhen;
     }
     
-    public static Result<Position> Create(
+    public static Result<Position, Error> Create(
         Guid id,
         string name,
         string? description,
-        bool isActive,
         DateTimeOffset createdWhen)
     {
         if (id == Guid.Empty)
-            return Result.Failure<Position>("ID позиции не может быть пустым.");
+            return GeneralErrors.ValueIsInvalid("id","ID позиции не может быть пустым.");
             
         var nameResult = PositionName.Create(name);
         if (nameResult.IsFailure)
-            return Result.Failure<Position>(nameResult.Error);
+            return nameResult.Error;
             
         var desc = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
         if (desc?.Length > LenghtConstants.MAXLENGHT)
-            return Result.Failure<Position>("Описание не может быть больше 1000 символов.");
-            
-        return Result.Success(new Position(
+            return GeneralErrors.ValueIsInvalid("desc", "Описание не может быть больше 1000 символов.");
+
+        return new Position(
             id,
             nameResult.Value,
             desc,
-            isActive,
-            createdWhen));
+            createdWhen);
     }
 }

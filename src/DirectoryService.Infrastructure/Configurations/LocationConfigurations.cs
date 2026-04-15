@@ -17,7 +17,7 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
         
         builder.ComplexProperty(l => l.Name, nameBuilder =>
         {
-            nameBuilder.Property<string>("Value")
+            nameBuilder.Property<string>(n => n.Value)
                 .HasColumnName("name")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
@@ -58,7 +58,7 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
         
         builder.ComplexProperty(l => l.Timezone, tzBuilder =>
         {
-            tzBuilder.Property<string>("Value")
+            tzBuilder.Property<string>(s => s.Value)
                 .HasColumnName("timezone")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
@@ -75,5 +75,9 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
         builder.Property(l => l.UpdatedWhen)
             .HasColumnName("updated_when")
             .IsRequired();
+        
+        builder.HasMany(p => p.DepartmentLocations)
+            .WithOne()
+            .HasForeignKey(dl => dl.LocationId);
     }
 } 

@@ -19,7 +19,7 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
         
         builder.ComplexProperty(p => p.Name, nameBuilder =>
         {
-            nameBuilder.Property<string>("Value")
+            nameBuilder.Property<string>(n => n.Value)
                 .HasColumnName("name")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
@@ -41,5 +41,9 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
         builder.Property(p => p.UpdatedWhen)
             .HasColumnName("updated_when")
             .IsRequired();
+
+        builder.HasMany(p => p.DepartmentPosition)
+            .WithOne()
+            .HasForeignKey(dp => dp.PositionId);
     }
 }

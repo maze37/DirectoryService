@@ -1,5 +1,6 @@
-﻿using DirectoryService.Domain;
-using DirectoryService.Domain.Department;
+﻿using DirectoryService.Domain.Department;
+using DirectoryService.Domain.DepartmentLocations;
+using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Location;
 using DirectoryService.Domain.Position;
 using Microsoft.EntityFrameworkCore;
@@ -13,8 +14,8 @@ public class AppDbContext : DbContext
     public DbSet<Department> Departments { get; set; }
     public DbSet<Location> Locations { get; set; }
     public DbSet<Position> Positions { get; set; }
-    public DbSet<DepartmentLocations> DepartmentLocations { get; set; }
-    public DbSet<DepartmentPositions> DepartmentPositions { get; set; }
+    public DbSet<DepartmentLocation> DepartmentLocations { get; set; }
+    public DbSet<DepartmentPosition> DepartmentPositions { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,10 +1,15 @@
 using CSharpFunctionalExtensions;
+using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.Location.ValueObjects;
 using Shared.Base;
+using Shared.Result;
 
 namespace DirectoryService.Domain.Location;
 
-public class Location : AggregateRoot
+/// <summary>
+/// Где находятся подразделения
+/// </summary>
+public sealed class Location : AggregateRoot
 {
     public LocationName Name { get; private set; }
     public Address Address { get; private set; }
@@ -13,6 +18,12 @@ public class Location : AggregateRoot
     public DateTimeOffset CreatedWhen { get; private set; }
     public DateTimeOffset UpdatedWhen { get; private set; }
     
+    /// <summary>
+    /// Для связи м-м
+    /// </summary>
+    public IReadOnlyList<DepartmentLocation> DepartmentLocations { get; private set; }
+    
+    // EF Core
     private Location() : base(Guid.Empty) { }
     
     private Location(
@@ -20,18 +31,17 @@ public class Location : AggregateRoot
         LocationName name,
         Address address,
         Timezone timezone,
-        bool isActive,
         DateTimeOffset createdWhen) : base(id)
     {
         Name = name;
         Address = address;
         Timezone = timezone;
-        IsActive = isActive;
+        IsActive = true;
         CreatedWhen = createdWhen;
         UpdatedWhen = createdWhen;
     }
     
-    public static Result<Location> Create(
+    public static Result<Location, Error> Create(
         Guid id,
         LocationName name,
         Address address,
@@ -39,14 +49,25 @@ public class Location : AggregateRoot
         DateTimeOffset createdWhen)
     {
         if (id == Guid.Empty)
-            return Result.Failure<Location>("ID локации не может быть пустым.");
+            return GeneralErrors.ValueIsInvalid("id","ID локации не может быть пустым.");
             
-        return Result.Success(new Location(
-            id,
-            name,
-            address,
-            timezone,
-            isActive: true,
-            createdWhen));
+        var nameResult = LocationName.Create(name);
+        if (nameResult.IsFailure)
+            return nameResult.Error;
+            
+        var addressResult = Address.Create(country, city, street, building, office, postalCode);
+        if (addressResult.IsFailure)
+            return addressResult.Error;
+            
+        var timezoneResult = Timezone.Create(timezone);
+        if (timezoneResult.IsFailure)
+            return timezoneResult.Error;
+        
+        return new Location(
+            id, 
+            nameResult.Value,
+            addressResult.Value, 
+            timezoneResult.Value,
+            createdWhen);
     }
 }

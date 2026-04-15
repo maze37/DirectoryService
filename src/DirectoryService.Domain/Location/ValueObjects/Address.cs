@@ -1,4 +1,5 @@
 using CSharpFunctionalExtensions;
+using Shared.Result;
 using ValueObject = Shared.Base.ValueObject;
 
 namespace DirectoryService.Domain.Location.ValueObjects;
@@ -32,7 +33,7 @@ public class Address : ValueObject
         PostalCode = postalCode;
     }
 
-    public static Result<Address> Create(
+    public static Result<Address, Error> Create(
         string country,
         string city,
         string street,
@@ -41,24 +42,24 @@ public class Address : ValueObject
         string? postalCode = null)
     {
         if (string.IsNullOrWhiteSpace(country))
-            return Result.Failure<Address>("Страна не может быть пустой.");
+            return GeneralErrors.ValueIsRequired("country");
             
         if (string.IsNullOrWhiteSpace(city))
-            return Result.Failure<Address>("Город не может быть пустым.");
+            return GeneralErrors.ValueIsRequired("city");
             
         if (string.IsNullOrWhiteSpace(street))
-            return Result.Failure<Address>("Улица не может быть пустой.");
+            return GeneralErrors.ValueIsRequired("street");
             
         if (string.IsNullOrWhiteSpace(building))
-            return Result.Failure<Address>("Номер здания не может быть пустым.");
+            return GeneralErrors.ValueIsRequired("building");
         
-        return Result.Success(new Address(
+        return new Address(
             country.Trim(),
             city.Trim(),
             street.Trim(),
             building.Trim(),
             office?.Trim(),
-            postalCode?.Trim()));
+            postalCode?.Trim());
     }
     
     protected override IEnumerable<object> GetEqualityComponents()

@@ -1,37 +1,28 @@
-﻿using DirectoryService.Domain;
-using DirectoryService.Domain.Department;
-using DirectoryService.Domain.Position;
+﻿using DirectoryService.Domain.DepartmentPositions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DirectoryService.Infrastructure.Configurations;
 
-public class DepartmentPositionsConfigurations : IEntityTypeConfiguration<DepartmentPositions>
+public class DepartmentPositionsConfigurations : IEntityTypeConfiguration<DepartmentPosition>
 {
-    public void Configure(EntityTypeBuilder<DepartmentPositions> builder)
+    public void Configure(EntityTypeBuilder<DepartmentPosition> builder)
     {
         builder.ToTable("department_positions");
-        
-        builder.HasKey(dp => new { dp.DepartmentId, dp.PositionId });
-        
+
+        builder.HasKey(dp => dp.Id)
+            .HasName("pk_department_positions");
+
+        builder.Property(dp => dp.Id)
+            .IsRequired()
+            .HasColumnName("id");
+
         builder.Property(dp => dp.DepartmentId)
-            .HasColumnName("department_id")
-            .IsRequired();
-        
+            .IsRequired()
+            .HasColumnName("department_id");
+
         builder.Property(dp => dp.PositionId)
-            .HasColumnName("position_id")
-            .IsRequired();
-        
-        builder.HasOne<Department>()
-            .WithMany(d => d.Positions)
-            .HasForeignKey(dp => dp.DepartmentId)
-            .HasConstraintName("fk_department_positions_department")
-            .OnDelete(DeleteBehavior.Cascade);
-        
-        builder.HasOne<Position>()
-            .WithMany()
-            .HasForeignKey(dp => dp.PositionId)
-            .HasConstraintName("fk_department_positions_position")
-            .OnDelete(DeleteBehavior.Restrict);
+            .IsRequired()
+            .HasColumnName("position_id");
     }
 }

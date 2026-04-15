@@ -1,12 +1,13 @@
 using CSharpFunctionalExtensions;
+using Shared.Result;
 using ValueObject = Shared.Base.ValueObject;
 
 namespace DirectoryService.Domain.Location.ValueObjects;
 
 public class LocationName : ValueObject
 {
-    public const int MinLength = 3;
-    public const int MaxLength = 120;
+    public const int MIN_NAME_LENGHT = 3;
+    public const int MAX_NAME_LENGHT = 120;
     
     public string Value { get; }
     
@@ -15,18 +16,18 @@ public class LocationName : ValueObject
         Value = value;
     }
 
-    public static Result<LocationName> Create(string value)
+    public static Result<LocationName, Error> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Result.Failure<LocationName>("Название локации не может быть пустым.");
+            return GeneralErrors.ValueIsRequired("location name");
 
-        if (value.Length < MinLength)
-            return Result.Failure<LocationName>($"Название локации не может быть меньше {MinLength} символов.");
+        if (value.Length < MIN_NAME_LENGHT)
+            return GeneralErrors.ValueIsInvalid("location name", $"Название локации не может быть меньше {MIN_NAME_LENGHT} символов.");
 
-        if (value.Length > MaxLength)
-            return Result.Failure<LocationName>($"Название локации не может быть больше {MaxLength} символов.");
+        if (value.Length > MAX_NAME_LENGHT)
+            return GeneralErrors.ValueIsInvalid("location name", $"Название локации не может быть больше {MAX_NAME_LENGHT} символов.");
         
-        return Result.Success(new LocationName(value));
+        return new LocationName(value);
     }
     
     protected override IEnumerable<object> GetEqualityComponents()

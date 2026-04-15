@@ -1,12 +1,13 @@
 using CSharpFunctionalExtensions;
+using Shared.Result;
 using ValueObject = Shared.Base.ValueObject;
 
 namespace DirectoryService.Domain.Department.ValueObjects;
 
 public class Name : ValueObject
 {
-    public const int MinLenght = 3;
-    public const int MaxLenght = 150;
+    public const int MIN_NAME_LENGHT = 3;
+    public const int MAX_NAME_LENGHT = 150;
     
     public string Value { get; }
     
@@ -15,18 +16,18 @@ public class Name : ValueObject
         Value = value;
     }
 
-    public static Result<Name> Create(string value)
+    public static Result<Name, Error> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Result.Failure<Name>("Название подразделения не может быть пустым.");
+            return GeneralErrors.ValueIsRequired("name");
 
-        if (value.Length < MinLenght)
-            return Result.Failure<Name>("Длина названия не может быть меньше 3.");
+        if (value.Length < MIN_NAME_LENGHT)
+            return GeneralErrors.ValueIsInvalid("name", $"Название не может быть короче {MIN_NAME_LENGHT} символов");
 
-        if (value.Length > MaxLenght)
-            return Result.Failure<Name>("Длина названия не может быть больше 150.");
+        if (value.Length > MAX_NAME_LENGHT)
+            return GeneralErrors.ValueIsInvalid("name", $"Название не может быть длиннее {MAX_NAME_LENGHT} символов");
         
-        return Result.Success(new Name(value));
+        return new Name(value);
     }
     
     protected override IEnumerable<object> GetEqualityComponents()
