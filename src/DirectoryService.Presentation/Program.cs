@@ -1,33 +1,25 @@
-using System.Globalization;
 using DirectoryService.Presentation.Configuration;
 using Serilog;
-
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
-    .CreateLogger();
 
 try
 {
     Log.Information("Starting web application");
-    
+
     var builder = WebApplication.CreateBuilder(args);
 
-    // DI
+    builder.Host.UseSerilog((context, services, lc) => lc
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("ServiceName", "DirectoryService"));
+
     builder.Services.ConfigureApp(builder.Configuration);
-    
-    // Serilog
-    builder.Host.UseSerilog();
 
     var app = builder.Build();
 
-    // Подключение Middlewares
     app.ConfigureExtensions();
-    
-    // Логирование HTTP запросов
-    app.UseSerilogRequestLogging();
-
-    // Регистрация контроллеров
     app.MapControllers();
+
     await app.RunAsync().ConfigureAwait(false);
 }
 catch (Exception ex)
