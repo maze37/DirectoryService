@@ -3,6 +3,8 @@ using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Core;
+using Shared.Result;
+using ILogger = Serilog.ILogger;
 
 namespace DirectoryService.Presentation.Controllers;
 
@@ -11,10 +13,14 @@ namespace DirectoryService.Presentation.Controllers;
 public class LocationControllers : ControllerBase
 {
     private readonly ICommandHandler<CreateLocationCommand, CreateLocationResponse> _createHandler;
+    private readonly ILogger _logger;
 
-    public LocationControllers(ICommandHandler<CreateLocationCommand, CreateLocationResponse> createHandler)
+    public LocationControllers(
+        ICommandHandler<CreateLocationCommand, CreateLocationResponse> createHandler,
+        ILogger logger)
     {
         _createHandler = createHandler ?? throw new ArgumentNullException(nameof(createHandler));
+        _logger = logger.ForContext<LocationControllers>();
     }
 
     [HttpPost]
@@ -23,14 +29,19 @@ public class LocationControllers : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var command = new CreateLocationCommand(
-            location.Name, 
+            location.Name,
             location.Address,
             location.Timezone);
 
         var result = await _createHandler.HandleAsync(command, cancellationToken);
 
         if (result.IsFailure)
+        {
+            _logger.Error("Ошибка создания локации: {Error}", result.Error.ToResponse());
             return result.Error.ToResponse();
+        }
+
+        _logger.Information("Локация с ID: {LocationId} успешно создана", result.Value.Id);
 
         return Ok(Envelope.Ok(result.Value));
     }

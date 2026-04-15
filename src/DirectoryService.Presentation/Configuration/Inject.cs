@@ -1,7 +1,7 @@
 using DirectoryService.Application;
 using DirectoryService.Infrastructure;
 
-namespace DirectoryService.Presentation;
+namespace DirectoryService.Presentation.Configuration;
 
 public static class Inject
 {
@@ -11,9 +11,9 @@ public static class Inject
     {
         services
             .AddInfrastructure(configuration)
-            .AddApplication();
-
-        services
+            .AddApplication()
+            .AddSwaggerGen()
+            .AddEndpointsApiExplorer()
             .AddControllers();
 
         return services;

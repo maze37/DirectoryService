@@ -1,21 +1,32 @@
-using DirectoryService.Presentation;
+using DirectoryService.Presentation.Configuration;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddOpenApi();
-
-builder.Services.ConfigureApp(builder.Configuration);
-
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
+try
 {
-    app.MapOpenApi();
-    app.UseSwaggerUI(options =>
-        options.SwaggerEndpoint("/openapi/v1.json", "v1"));
+    Log.Information("Starting web application");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilog((context, services, lc) => lc
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("ServiceName", "DirectoryService"));
+
+    builder.Services.ConfigureApp(builder.Configuration);
+
+    var app = builder.Build();
+
+    app.ConfigureExtensions();
+    app.MapControllers();
+
+    await app.RunAsync().ConfigureAwait(false);
 }
-
-app.UseHttpsRedirection();
-
-app.MapControllers();
-app.Run();
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

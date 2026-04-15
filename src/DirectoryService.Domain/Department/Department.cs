@@ -24,12 +24,12 @@ public sealed class Department : AggregateRoot
     /// <summary>
     /// Название отдела.
     /// </summary>
-    public Name Name { get; private set; }
-    
+    public Name Name { get; private set; } = null!;
+
     /// <summary>
     /// Идентификатор отдела.
     /// </summary>
-    public Identifier Identifier { get; private set; }
+    public Identifier Identifier { get; private set; } = null!;
     
     /// <summary>
     /// FK → Department.Id; null — корень.
@@ -39,7 +39,7 @@ public sealed class Department : AggregateRoot
     /// <summary>
     /// Путь 
     /// </summary>
-    public Path Path { get; private set; }
+    public Path Path { get; private set; } = null!;
     
     /// <summary>
     /// Гоубина подразделения

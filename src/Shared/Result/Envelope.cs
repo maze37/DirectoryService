@@ -1,6 +1,4 @@
-﻿using Shared.Result;
-
-namespace DirectoryService.Presentation.ResponseExtensions;
+﻿namespace Shared.Result;
 
 public record Envelope
 {

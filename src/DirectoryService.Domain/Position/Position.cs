@@ -14,7 +14,7 @@ public sealed class Position : AggregateRoot
     /// <summary>
     /// Название должности. Уникальное, от 3 до 100 символов.
     /// </summary>
-    public PositionName Name { get; private set; }
+    public PositionName Name { get; private set; } = null!;
     
     /// <summary>
     /// Описание должности. Необязательное поле, максимум 1000 символов.
@@ -40,7 +40,7 @@ public sealed class Position : AggregateRoot
     /// <summary>
     /// Для связи м-м
     /// </summary>
-    public IReadOnlyList<DepartmentPosition> DepartmentPosition { get; private set; }
+    public IReadOnlyList<DepartmentPosition> DepartmentPosition { get; private set; } = null!;
     
     // EF Core
     private Position() : base(Guid.Empty) { }

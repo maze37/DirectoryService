@@ -3,11 +3,11 @@
 namespace DirectoryService.Infrastructure;
 
 /// <inheritdoc/>
-public class TransactionManager : IUnitOfWork
+public class UnitOfWork : IUnitOfWork
 {
     private readonly AppDbContext _context;
     
-    public TransactionManager(AppDbContext context)
+    public UnitOfWork(AppDbContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }
