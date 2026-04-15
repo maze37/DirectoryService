@@ -3,6 +3,7 @@ using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Core;
+using Shared.Result;
 
 namespace DirectoryService.Presentation.Controllers;
 

@@ -1,7 +1,7 @@
 using DirectoryService.Application;
 using DirectoryService.Infrastructure;
 
-namespace DirectoryService.Presentation;
+namespace DirectoryService.Presentation.Configuration;
 
 public static class Inject
 {
