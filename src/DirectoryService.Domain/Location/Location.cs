@@ -12,9 +12,9 @@ namespace DirectoryService.Domain.Location;
 /// </summary>
 public sealed class Location : AggregateRoot
 {
-    public LocationName Name { get; private set; }
-    public Address Address { get; private set; }
-    public Timezone Timezone { get; private set; }
+    public LocationName Name { get; private set; } = null!;
+    public Address Address { get; private set; } = null!;
+    public Timezone Timezone { get; private set; } = null!;
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedWhen { get; private set; }
     public DateTimeOffset UpdatedWhen { get; private set; }
@@ -22,7 +22,7 @@ public sealed class Location : AggregateRoot
     /// <summary>
     /// Для связи м-м
     /// </summary>
-    public IReadOnlyList<DepartmentLocation> DepartmentLocations { get; private set; }
+    public IReadOnlyList<DepartmentLocation> DepartmentLocations { get; private set; } = null!;
     
     // EF Core
     private Location() : base(Guid.Empty) { }

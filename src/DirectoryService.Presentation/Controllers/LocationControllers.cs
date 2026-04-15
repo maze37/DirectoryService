@@ -2,6 +2,7 @@
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using Shared.Core;
 using Shared.Result;
 
@@ -31,7 +32,12 @@ public class LocationControllers : ControllerBase
         var result = await _createHandler.HandleAsync(command, cancellationToken);
 
         if (result.IsFailure)
+        {
+            Log.Error("Ошибка создания локации: {Error}", result.Error.ToResponse());
             return result.Error.ToResponse();
+        }
+
+        Log.Information("Локация с ID: {LocationId} успешно создана", result.Value.Id);
 
         return Ok(Envelope.Ok(result.Value));
     }

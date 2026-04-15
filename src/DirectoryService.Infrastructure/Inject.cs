@@ -23,7 +23,7 @@ public static class Inject
         });
         
         services.AddScoped<IDateTimeProvider, DateTimeProvider>();
-        services.AddScoped<IUnitOfWork, TransactionManager>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         
         // Репозитории
         services.AddScoped<ILocationRepository, LocationRepository>();

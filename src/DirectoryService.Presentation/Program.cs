@@ -1,14 +1,40 @@
+using System.Globalization;
 using DirectoryService.Presentation.Configuration;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
+    .CreateLogger();
 
-builder.Services.ConfigureApp(builder.Configuration);
+try
+{
+    Log.Information("Starting web application");
+    
+    var builder = WebApplication.CreateBuilder(args);
 
-var app = builder.Build();
+    // DI
+    builder.Services.ConfigureApp(builder.Configuration);
+    
+    // Serilog
+    builder.Host.UseSerilog();
 
-app.ConfigureExtensions();
+    var app = builder.Build();
 
-app.UseHttpsRedirection();
+    // Подключение Middlewares
+    app.ConfigureExtensions();
+    
+    // Логирование HTTP запросов
+    app.UseSerilogRequestLogging();
 
-app.MapControllers();
-app.Run();
+    // Регистрация контроллеров
+    app.MapControllers();
+    await app.RunAsync().ConfigureAwait(false);
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
