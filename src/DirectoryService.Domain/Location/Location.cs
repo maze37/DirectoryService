@@ -1,4 +1,5 @@
 using CSharpFunctionalExtensions;
+using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.Location.ValueObjects;
 using Shared.Base;
@@ -43,9 +44,9 @@ public sealed class Location : AggregateRoot
     
     public static Result<Location, Error> Create(
         Guid id,
-        LocationName name,
-        Address address,
-        Timezone timezone,
+        string name,
+        AddressDto address,
+        string timezone,
         DateTimeOffset createdWhen)
     {
         if (id == Guid.Empty)
@@ -55,7 +56,7 @@ public sealed class Location : AggregateRoot
         if (nameResult.IsFailure)
             return nameResult.Error;
             
-        var addressResult = Address.Create(country, city, street, building, office, postalCode);
+        var addressResult = Address.Create(address.Country, address.City, address.Street, address.Building, address.Office, address.PostalCode);
         if (addressResult.IsFailure)
             return addressResult.Error;
             

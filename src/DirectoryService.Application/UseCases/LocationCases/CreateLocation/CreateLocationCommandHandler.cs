@@ -30,9 +30,9 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
     {
         var locationResult = Location.Create(
             Guid.NewGuid(),
-            nameResult.Value,
-            addressResult.Value,
-            timezoneResult.Value,
+            command.Name,
+            command.Address,
+            command.Timezone,
             _date.UtcNow);
 
         if (locationResult.IsFailure)
