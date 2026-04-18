@@ -24,11 +24,11 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
         });
-
+        
         builder.Property(p => p.Description)
             .HasColumnName("description")
             .IsRequired(false)
-            .HasMaxLength(LenghtConstants.MAXLENGHT);
+            .HasMaxLength(1000);
         
         builder.Property(p => p.IsActive)
             .HasColumnName("is_active")

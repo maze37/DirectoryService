@@ -23,19 +23,4 @@ public class DepartmentRepository : IDepartmentRepository
         return await _context.Departments
             .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
     }
-    
-    public async Task<bool> AllExistAndActiveAsync(Guid[] ids, CancellationToken cancellationToken = default)
-    {
-        var count = await _context.Departments
-            .Where(d => ids.Contains(d.Id) && d.IsActive)
-            .CountAsync(cancellationToken);
-
-        return count == ids.Length;
-    }
-
-    public async Task<bool> ExistsByIdentifierAsync(string identifier, CancellationToken cancellationToken = default)
-    {
-        return await _context.Departments
-            .AnyAsync(d => d.Identifier.Value == identifier, cancellationToken);
-    }
 }

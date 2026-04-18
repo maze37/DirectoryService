@@ -16,7 +16,7 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         builder.ComplexProperty(d => d.DepartmentName, nameBuilder =>
         {
             nameBuilder.Property<string>(n => n.Value)
-                .HasColumnName("name")
+                .HasColumnName("departmentName")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
         });

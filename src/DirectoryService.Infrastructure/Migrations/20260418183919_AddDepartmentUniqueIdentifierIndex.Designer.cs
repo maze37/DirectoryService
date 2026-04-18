@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DirectoryService.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,13 +13,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DirectoryService.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260418183919_AddDepartmentUniqueIdentifierIndex")]
+    partial class AddDepartmentUniqueIdentifierIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -60,6 +63,17 @@ namespace DirectoryService.Infrastructure.Migrations
                     b.Property<int>("Version")
                         .HasColumnType("integer");
 
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "DepartmentName", "DirectoryService.Domain.Department.Department.DepartmentName#DepartmentName", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)")
+                                .HasColumnName("departmentName");
+                        });
+
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Identifier", "DirectoryService.Domain.Department.Department.Identifier#Identifier", b1 =>
                         {
                             b1.IsRequired();
@@ -69,17 +83,6 @@ namespace DirectoryService.Infrastructure.Migrations
                                 .HasMaxLength(1000)
                                 .HasColumnType("character varying(1000)")
                                 .HasColumnName("identifier");
-                        });
-
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "Name", "DirectoryService.Domain.Department.Department.Name#Name", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(1000)
-                                .HasColumnType("character varying(1000)")
-                                .HasColumnName("name");
                         });
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Path", "DirectoryService.Domain.Department.Department.Path#Path", b1 =>
@@ -221,7 +224,7 @@ namespace DirectoryService.Infrastructure.Migrations
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("character varying(1000)")
-                                .HasColumnName("name");
+                                .HasColumnName("departmentName");
                         });
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Timezone", "DirectoryService.Domain.Location.Location.Timezone#Timezone", b1 =>
@@ -274,7 +277,7 @@ namespace DirectoryService.Infrastructure.Migrations
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("character varying(1000)")
-                                .HasColumnName("name");
+                                .HasColumnName("departmentName");
                         });
 
                     b.HasKey("Id");
