@@ -25,11 +25,11 @@ public class Timezone : ValueObject
         }
         catch (TimeZoneNotFoundException)
         {
-            return GeneralErrors.ValueIsInvalid("timezone", $"Часовой пояс '{value}' не найден. Используйте IANA код, например: Europe/Moscow");
+            return GeneralErrors.ValueIsInvalid("timezone", "Часовой пояс не найден. Используйте IANA код, например: Europe/Moscow");
         }
         catch (InvalidTimeZoneException)
         {
-            return GeneralErrors.ValueIsInvalid("timezone", $"Часовой пояс '{value}' имеет некорректный формат.");
+            return GeneralErrors.ValueIsInvalid("timezone", "Часовой пояс имеет некорректный формат.");
         }
     }
     

@@ -3,11 +3,11 @@ using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
-using DirectoryService.Domain.Location.ValueObjects;
 using FluentValidation;
 using Serilog;
 using Shared.Core;
-using Shared.Result;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace DirectoryService.Application.UseCases.LocationCases.CreateLocation;
 
@@ -57,8 +57,27 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         _logger.Information("Локация с названием: {LocationName} успешно создана", locationResult.Value.Name);
 
         await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx)
+        {
+            _logger.Error("DbUpdateException: {Message}", pgEx.Message);
 
+            if (pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                if (pgEx.ConstraintName?.Contains("name") == true)
+                    return Error.Conflict("location.name.taken", "Локация с таким названием уже существует");
+
+                if (pgEx.ConstraintName?.Contains("address") == true)
+                    return Error.Conflict("location.address.taken", "Локация с таким адресом уже существует");
+            }
+
+            throw;
+        }
+        
         return new CreateLocationResponse(locationResult.Value.Id);
     }
 }
