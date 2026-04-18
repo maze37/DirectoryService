@@ -1,4 +1,5 @@
 using System.Reflection;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Core;
 
@@ -27,6 +28,8 @@ public static class Inject
                 .AssignableTo(typeof(IQueryHandler<,>)))
             .AsImplementedInterfaces()
             .WithTransientLifetime());
+
+        services.AddValidatorsFromAssembly(typeof(Inject).Assembly);
         
         return services;
     }
