@@ -19,13 +19,13 @@ public class LocationName : ValueObject
     public static Result<LocationName, Error> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return GeneralErrors.ValueIsRequired("location name");
+            return GeneralErrors.ValueIsRequired("location departmentName");
 
         if (value.Length < MIN_NAME_LENGHT)
-            return GeneralErrors.ValueIsInvalid("location name", $"Название локации не может быть меньше {MIN_NAME_LENGHT} символов.");
+            return GeneralErrors.ValueIsInvalid("location departmentName", $"Название локации не может быть меньше {MIN_NAME_LENGHT} символов.");
 
         if (value.Length > MAX_NAME_LENGHT)
-            return GeneralErrors.ValueIsInvalid("location name", $"Название локации не может быть больше {MAX_NAME_LENGHT} символов.");
+            return GeneralErrors.ValueIsInvalid("location departmentName", $"Название локации не может быть больше {MAX_NAME_LENGHT} символов.");
         
         return new LocationName(value);
     }

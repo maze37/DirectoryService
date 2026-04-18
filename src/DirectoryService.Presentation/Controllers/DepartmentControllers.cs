@@ -1,5 +1,5 @@
-﻿using DirectoryService.Application.UseCases.LocationCases.CreateLocation;
-using DirectoryService.Contracts.LocationContracts;
+﻿using DirectoryService.Application.UseCases.DepartmentCases.CreateDepartment;
+using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Core;
@@ -9,14 +9,14 @@ using ILogger = Serilog.ILogger;
 namespace DirectoryService.Presentation.Controllers;
 
 [ApiController]
-[Route("/api/locations")]
-public class LocationControllers : ControllerBase
+[Route("api/departments")]
+public class DepartmentControllers : ControllerBase
 {
-    private readonly ICommandHandler<CreateLocationCommand, CreateLocationResponse> _createHandler;
+    private readonly ICommandHandler<CreateDepartmentCommand, CreateDepartmentResponse> _createHandler;
     private readonly ILogger _logger;
-
-    public LocationControllers(
-        ICommandHandler<CreateLocationCommand, CreateLocationResponse> createHandler,
+    
+    public DepartmentControllers(
+        ICommandHandler<CreateDepartmentCommand, CreateDepartmentResponse> createHandler,
         ILogger logger)
     {
         _createHandler = createHandler ?? throw new ArgumentNullException(nameof(createHandler));
@@ -25,20 +25,20 @@ public class LocationControllers : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> CreateAsync(
-        [FromBody] CreateLocationRequest location,
+        [FromBody] CreateDepartmentRequest request,
         CancellationToken cancellationToken = default)
     {
-        var command = new CreateLocationCommand(location);
+        var command = new CreateDepartmentCommand(request);
 
         var result = await _createHandler.HandleAsync(command, cancellationToken);
 
         if (result.IsFailure)
         {
-            _logger.Error("Ошибка создания локации: {Error}", result.Error.ToResponse());
+            _logger.Error("Ошибка создания отдела: {Error}", result.Error.ToResponse());
             return result.Error.ToResponse();
         }
 
-        _logger.Information("Локация с ID: {LocationId} успешно создана", result.Value.Id);
+        _logger.Information("Отдел с ID: {DepartmentId} успешно создана", result.Value.Id);
 
         return Ok(Envelope.Ok(result.Value));
     }

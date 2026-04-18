@@ -18,7 +18,7 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
         builder.ComplexProperty(l => l.Name, nameBuilder =>
         {
             nameBuilder.Property<string>(n => n.Value)
-                .HasColumnName("name")
+                .HasColumnName("departmentName")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
         });

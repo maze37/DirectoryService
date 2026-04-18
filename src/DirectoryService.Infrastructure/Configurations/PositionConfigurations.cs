@@ -20,7 +20,7 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
         builder.ComplexProperty(p => p.Name, nameBuilder =>
         {
             nameBuilder.Property<string>(n => n.Value)
-                .HasColumnName("name")
+                .HasColumnName("departmentName")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
         });
@@ -28,7 +28,7 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
         builder.Property(p => p.Description)
             .HasColumnName("description")
             .IsRequired(false)
-            .HasMaxLength(1000);
+            .HasMaxLength(LenghtConstants.MAXLENGHT);
         
         builder.Property(p => p.IsActive)
             .HasColumnName("is_active")

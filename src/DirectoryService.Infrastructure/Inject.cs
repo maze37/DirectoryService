@@ -27,6 +27,8 @@ public static class Inject
         
         // Репозитории
         services.AddScoped<ILocationRepository, LocationRepository>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<IPositionRepository, PositionRepository>();
         
         return services;
     }

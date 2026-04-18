@@ -68,8 +68,8 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
 
             if (pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
             {
-                if (pgEx.ConstraintName?.Contains("name") == true)
-                    return Error.Conflict("location.name.taken", "Локация с таким названием уже существует");
+                if (pgEx.ConstraintName?.Contains("departmentName") == true)
+                    return Error.Conflict("location.departmentName.taken", "Локация с таким названием уже существует");
 
                 if (pgEx.ConstraintName?.Contains("address") == true)
                     return Error.Conflict("location.address.taken", "Локация с таким адресом уже существует");

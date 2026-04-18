@@ -5,17 +5,14 @@
 namespace DirectoryService.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddLocationUniqueIndexes : Migration
+    public partial class AddDepartmentUniqueIdentifierIndex : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"
-                CREATE UNIQUE INDEX ix_locations_name 
-                ON locations (departmentName);
-            
-                CREATE UNIQUE INDEX ix_locations_address 
-                ON locations (address_country, address_city, address_street, address_building, address_office);
+                CREATE UNIQUE INDEX ix_departments_identifier 
+                ON departments (identifier);
             ");
         }
 
@@ -23,8 +20,7 @@ namespace DirectoryService.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"
-                DROP INDEX IF EXISTS ix_locations_name;
-                DROP INDEX IF EXISTS ix_locations_address;
+                DROP INDEX IF EXISTS ix_departments_identifier;
             ");
         }
     }

@@ -15,10 +15,10 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         
         builder.Property(d => d.Id).HasColumnName("id");
         
-        builder.ComplexProperty(d => d.Name, nameBuilder =>
+        builder.ComplexProperty(d => d.DepartmentName, nameBuilder =>
         {
             nameBuilder.Property<string>(n => n.Value)
-                .HasColumnName("name")
+                .HasColumnName("departmentName")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
         });
