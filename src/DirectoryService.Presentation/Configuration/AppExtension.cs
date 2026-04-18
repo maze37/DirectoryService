@@ -1,11 +1,13 @@
-﻿using DirectoryService.Presentation.Middlewares;
+﻿using DirectoryService.Infrastructure;
+using DirectoryService.Presentation.Middlewares;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace DirectoryService.Presentation.Configuration;
 
 public static class AppExtension 
 {
-    public static WebApplication ConfigureExtensions(this WebApplication app)
+    public static async Task<WebApplication> ConfigureExtensions(this WebApplication app)
     {
         app.UseExceptionMiddleware();
         
@@ -14,6 +16,11 @@ public static class AppExtension
         
         app.UseSwagger();
         app.UseSwaggerUI();
+        
+        // Автоматическое применение миграций
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.MigrateAsync();
 
         return app;
     }
