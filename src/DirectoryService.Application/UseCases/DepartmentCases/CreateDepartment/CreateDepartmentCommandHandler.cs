@@ -53,6 +53,11 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         if (!locationExists)
             return Errors.General.NotFound(name: "locations");
 
+        var identifierExists = await _departmentRepository
+            .ExistsByIdentifierAsync(command.Request.Identifier, cancellationToken);
+        if (identifierExists)
+            return Error.Conflict("department.identifier.taken", "Отдел с таким идентификатором уже существует");
+
         var departmentId = Guid.NewGuid();
         var departmentLocations = command.Request.LocationIds
             .Select(locationId => new DepartmentLocation(departmentId, locationId))

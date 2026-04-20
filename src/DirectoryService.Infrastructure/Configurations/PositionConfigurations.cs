@@ -20,11 +20,11 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
         builder.ComplexProperty(p => p.Name, nameBuilder =>
         {
             nameBuilder.Property<string>(n => n.Value)
-                .HasColumnName("departmentName")
+                .HasColumnName("name")
                 .IsRequired()
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
         });
-        
+
         builder.Property(p => p.Description)
             .HasColumnName("description")
             .IsRequired(false)

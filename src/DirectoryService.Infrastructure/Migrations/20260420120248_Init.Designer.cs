@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DirectoryService.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260418183919_AddDepartmentUniqueIdentifierIndex")]
-    partial class AddDepartmentUniqueIdentifierIndex
+    [Migration("20260420120248_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -71,7 +71,7 @@ namespace DirectoryService.Infrastructure.Migrations
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("character varying(1000)")
-                                .HasColumnName("departmentName");
+                                .HasColumnName("name");
                         });
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Identifier", "DirectoryService.Domain.Department.Department.Identifier#Identifier", b1 =>
@@ -224,7 +224,7 @@ namespace DirectoryService.Infrastructure.Migrations
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("character varying(1000)")
-                                .HasColumnName("departmentName");
+                                .HasColumnName("name");
                         });
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Timezone", "DirectoryService.Domain.Location.Location.Timezone#Timezone", b1 =>
@@ -277,7 +277,7 @@ namespace DirectoryService.Infrastructure.Migrations
                                 .IsRequired()
                                 .HasMaxLength(1000)
                                 .HasColumnType("character varying(1000)")
-                                .HasColumnName("departmentName");
+                                .HasColumnName("name");
                         });
 
                     b.HasKey("Id");

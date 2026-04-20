@@ -49,20 +49,23 @@ public sealed class Position : AggregateRoot
         Guid id,
         PositionName name,
         string? description,
-        DateTimeOffset createdWhen) : base(id)
+        DateTimeOffset createdWhen,
+        List<DepartmentPosition> departmentPositions) : base(id)
     {
         Name = name;
         Description = description;
         IsActive = true;
         CreatedWhen = createdWhen;
         UpdatedWhen = createdWhen;
+        DepartmentPosition = departmentPositions;
     }
     
     public static Result<Position, Error> Create(
         Guid id,
         string name,
         string? description,
-        DateTimeOffset createdWhen)
+        DateTimeOffset createdWhen,
+        List<DepartmentPosition> departmentPositions)
     {
         if (id == Guid.Empty)
             return GeneralErrors.ValueIsInvalid("id","ID позиции не может быть пустым.");
@@ -79,6 +82,7 @@ public sealed class Position : AggregateRoot
             id,
             nameResult.Value,
             desc,
-            createdWhen);
+            createdWhen,
+            departmentPositions);
     }
 }
