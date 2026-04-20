@@ -15,20 +15,20 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
 {
     private readonly ILocationRepository _locationRepository;
     private readonly IDateTimeProvider _date;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITransactionManager _transactionManager;
     private readonly ILogger _logger;
     private readonly IValidator<CreateLocationCommand> _validator;
 
     public CreateLocationCommandHandler(
         ILocationRepository locationRepository,
         IDateTimeProvider date,
-        IUnitOfWork unitOfWork,
+        ITransactionManager transactionManager,
         ILogger logger,
         IValidator<CreateLocationCommand> validator)
     {
         _locationRepository = locationRepository ?? throw new ArgumentNullException(nameof(locationRepository));
         _date = date ?? throw new ArgumentNullException(nameof(date));
-        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _transactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
         _logger = logger ?? throw new ArgumentException(nameof(logger));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
     }
@@ -58,26 +58,22 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
 
         await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
         
-        try
+        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+        if (saveResult.IsFailure)
         {
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx)
-        {
-            _logger.Error("DbUpdateException: {Message}", pgEx.Message);
-
-            if (pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
-            {
-                if (pgEx.ConstraintName?.Contains("name") == true)
-                    return Error.Conflict("location.name.taken", "Локация с таким названием уже существует");
-
-                if (pgEx.ConstraintName?.Contains("address") == true)
-                    return Error.Conflict("location.address.taken", "Локация с таким адресом уже существует");
-            }
-
-            throw;
+            // Уточняем ошибку по имени constraint
+            var constraintName = saveResult.Error.Message;
+        
+            if (constraintName.Contains("ix_locations_name"))
+                return Error.Conflict("location.name.taken", "Локация с таким названием уже существует");
+        
+            if (constraintName.Contains("ix_locations_address"))
+                return Error.Conflict("location.address.taken", "Локация с таким адресом уже существует");
+        
+            return saveResult.Error;
         }
         
+        _logger.Information("Локация {Name} создана", locationResult.Value.Name.Value);
         return new CreateLocationResponse(locationResult.Value.Id);
     }
 }
