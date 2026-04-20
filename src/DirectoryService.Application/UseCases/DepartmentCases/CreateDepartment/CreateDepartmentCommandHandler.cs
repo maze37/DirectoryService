@@ -5,8 +5,6 @@ using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department;
 using DirectoryService.Domain.DepartmentLocations;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Serilog;
 using Shared.Core;
 using Shared.Result;
@@ -17,7 +15,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
 {
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ILocationRepository _locationRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITransactionManager _transactionManager;
     private readonly IDateTimeProvider _dateTime;
     private readonly ILogger _logger;
     private readonly IValidator<CreateDepartmentCommand> _validator;
@@ -25,14 +23,14 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
     public CreateDepartmentCommandHandler(
         IDepartmentRepository departmentRepository,
         ILocationRepository locationRepository,
-        IUnitOfWork unitOfWork,
+        ITransactionManager transactionManager,
         IDateTimeProvider dateTime,
         ILogger logger,
         IValidator<CreateDepartmentCommand> validator)
     {
         _departmentRepository = departmentRepository ?? throw new ArgumentNullException(nameof(departmentRepository));
         _locationRepository = locationRepository ?? throw new ArgumentNullException(nameof(locationRepository));
-        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _transactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
         _dateTime = dateTime ?? throw new ArgumentNullException(nameof(dateTime));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
@@ -44,9 +42,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
     {
         var validationResult = await _validator.ValidateAsync(command, cancellationToken);
         if (!validationResult.IsValid)
-        {
             return validationResult.ToError();
-        }
 
         bool locationExists = await _locationRepository
             .AllExistAsync(command.Request.LocationIds, cancellationToken);
@@ -99,19 +95,16 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
             return departmentResult.Error;
         
         await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
-    
-        try
+
+        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+        if (saveResult.IsFailure)
         {
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx)
-        {
-            _logger.Error("DbUpdateException: {Message}", pgEx.Message);
-        
-            if (pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
+            var constraint = saveResult.Error.InvalidField ?? "";
+
+            if (constraint.Contains("ix_departments_identifier"))
                 return Error.Conflict("department.identifier.taken", "Отдел с таким идентификатором уже существует");
-        
-            throw;
+
+            return saveResult.Error;
         }
 
         _logger.Information("Отдел {Name} создан", command.Request.Name);

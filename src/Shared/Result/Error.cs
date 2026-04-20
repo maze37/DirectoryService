@@ -26,7 +26,8 @@ public record Error
 
     public static Error Failure(string code, string message) => new(code, message, ErrorType.Failure);
 
-    public static Error Conflict(string code, string message) => new(code, message, ErrorType.Conflict);
+    public static Error Conflict(string code, string message, string? invalidField = null) => 
+        new(code, message, ErrorType.Conflict, invalidField);
 
     public string Serialize()
     {

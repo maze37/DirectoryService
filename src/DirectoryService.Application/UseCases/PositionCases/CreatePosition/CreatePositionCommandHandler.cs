@@ -5,8 +5,6 @@ using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Position;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Serilog;
 using Shared.Core;
 using Shared.Result;
@@ -17,7 +15,7 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
 {
     private readonly IPositionRepository _positionRepository;
     private readonly IDepartmentRepository _departmentRepository;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITransactionManager _transactionManager;
     private readonly IDateTimeProvider _dateTime;
     private readonly IValidator<CreatePositionCommand> _validator;
     private readonly ILogger _logger;
@@ -25,14 +23,14 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
     public CreatePositionCommandHandler(
         IPositionRepository positionRepository,
         IDepartmentRepository departmentRepository,
-        IUnitOfWork unitOfWork,
+        ITransactionManager transactionManager,
         IDateTimeProvider dateTime,
         IValidator<CreatePositionCommand> validator,
         ILogger logger)
     {
         _positionRepository = positionRepository ?? throw new ArgumentNullException(nameof(positionRepository));
         _departmentRepository = departmentRepository ?? throw new ArgumentNullException(nameof(departmentRepository));
-        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _transactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
         _dateTime = dateTime ?? throw new ArgumentNullException(nameof(dateTime));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -44,15 +42,13 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
     {
         var validationResult = await _validator.ValidateAsync(command, cancellationToken);
         if (!validationResult.IsValid)
-        {
             return validationResult.ToError();
-        }
 
         bool isExists = await _positionRepository
             .ExistsActiveWithNameAsync(command.Request.Name, cancellationToken);
         if (isExists)
         {
-            _logger.Warning("Должность с названием {PositionName}", command.Request.Name);
+            _logger.Warning("Должность с названием {PositionName} уже существует", command.Request.Name);
             return Error.Conflict("position.name.taken", "Должность с таким названием уже существует");
         }
 
@@ -78,18 +74,15 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
 
         await _positionRepository.AddAsync(positionResult.Value, cancellationToken);
 
-        try
+        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+        if (saveResult.IsFailure)
         {
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx)
-        {
-            _logger.Error("DbUpdateException: {Message}", pgEx.Message);
-    
-            if (pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
+            var constraint = saveResult.Error.InvalidField ?? "";
+
+            if (constraint.Contains("ix_positions_name"))
                 return Error.Conflict("position.name.taken", "Должность с таким названием уже существует");
-    
-            throw;
+
+            return saveResult.Error;
         }
 
         _logger.Information("Должность {Name} создана", command.Request.Name);
