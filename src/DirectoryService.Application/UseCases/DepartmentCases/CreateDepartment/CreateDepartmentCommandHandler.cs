@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
+using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department;
 using DirectoryService.Domain.DepartmentLocations;
@@ -15,6 +16,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
 {
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ILocationRepository _locationRepository;
+    private readonly ITransactionManager _transactionManager;
     private readonly IDateTimeProvider _dateTime;
     private readonly ILogger _logger;
     private readonly IValidator<CreateDepartmentCommand> _validator;
@@ -22,12 +24,14 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
     public CreateDepartmentCommandHandler(
         IDepartmentRepository departmentRepository,
         ILocationRepository locationRepository,
+        ITransactionManager transactionManager,
         IDateTimeProvider dateTime,
         ILogger logger,
         IValidator<CreateDepartmentCommand> validator)
     {
         _departmentRepository = departmentRepository ?? throw new ArgumentNullException(nameof(departmentRepository));
         _locationRepository = locationRepository ?? throw new ArgumentNullException(nameof(locationRepository));
+        _transactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
         _dateTime = dateTime ?? throw new ArgumentNullException(nameof(dateTime));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
@@ -45,6 +49,11 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
             .AllExistAsync(command.Request.LocationIds, cancellationToken);
         if (!locationExists)
             return Errors.General.NotFound(name: "locations");
+
+        var identifierExists = await _departmentRepository
+            .ExistsByIdentifierAsync(command.Request.Identifier, cancellationToken);
+        if (identifierExists)
+            return Error.Conflict("department.identifier.taken", "Отдел с таким идентификатором уже существует");
 
         var departmentId = Guid.NewGuid();
         var departmentLocations = command.Request.LocationIds
@@ -65,11 +74,14 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         }
         else
         {
-            var parent = await _departmentRepository
-                .GetByIdAsync(command.Request.ParentId.Value, cancellationToken);
+            var parentResult = await _departmentRepository.GetByAsync(
+                department => department.Id == command.Request.ParentId.Value,
+                cancellationToken);
 
-            if (parent is null)
-                return Errors.General.NotFound(name: "parent department");
+            if (parentResult.IsFailure)
+                return parentResult.Error;
+
+            var parent = parentResult.Value;
 
             if (!parent.IsActive)
                 return Error.Failure("department.parent.inactive", "Родительский отдел неактивен");
@@ -87,11 +99,16 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
             return departmentResult.Error;
         
         await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
-    
+
+        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
+        if (saveResult.IsFailure)
         {
-        
+            var constraint = saveResult.Error.InvalidField ?? "";
+
+            if (constraint.Contains(IndexConstants.Departments.Identifier))
                 return Error.Conflict("department.identifier.taken", "Отдел с таким идентификатором уже существует");
-        
+
+            return saveResult.Error;
         }
 
         _logger.Information("Отдел {Name} создан", command.Request.Name);

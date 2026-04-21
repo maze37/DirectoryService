@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
+using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
 using FluentValidation;
@@ -56,10 +57,10 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         {
             var constraint = saveResult.Error.InvalidField ?? "";
         
-            if (constraint.Contains("ix_locations_name"))
+            if (constraint.Contains(IndexConstants.Locations.Name))
                 return Error.Conflict("location.name.taken", "Локация с таким названием уже существует");
         
-            if (constraint.Contains("ix_locations_address"))
+            if (constraint.Contains(IndexConstants.Locations.Address))
                 return Error.Conflict("location.address.taken", "Локация с таким адресом уже существует");
         
             return saveResult.Error;

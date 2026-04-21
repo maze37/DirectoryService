@@ -25,13 +25,20 @@ public class DepartmentRepository : IDepartmentRepository
         Expression<Func<Department, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
-        var department = await _context.Departments
-            .FirstOrDefaultAsync(predicate, cancellationToken);
+        try
+        {
+            var department = await _context.Departments
+                .FirstOrDefaultAsync(predicate, cancellationToken);
 
-        if (department is null)
-            return Errors.General.NotFound(name: "department");
+            if (department is null)
+                return Errors.General.NotFound(name: "department");
 
-        return department;
+            return department;
+        }
+        catch (Exception)
+        {
+            return Error.Failure("department.get.failed", "Не удалось получить подразделение");
+        }
     }
 
     public async Task<bool> AllExistAndActiveAsync(Guid[] ids, CancellationToken cancellationToken = default)
@@ -45,6 +52,8 @@ public class DepartmentRepository : IDepartmentRepository
 
     public async Task<bool> ExistsByIdentifierAsync(string identifier, CancellationToken cancellationToken = default)
     {
+        identifier = identifier.Trim();
+
         return await _context.Departments
             .AnyAsync(d => d.Identifier.Value == identifier, cancellationToken);
     }

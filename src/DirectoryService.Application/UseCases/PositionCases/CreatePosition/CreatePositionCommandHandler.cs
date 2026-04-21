@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
+using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Position;
@@ -79,7 +80,7 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
         {
             var constraint = saveResult.Error.InvalidField ?? "";
 
-            if (constraint.Contains("ix_positions_name"))
+            if (constraint.Contains(IndexConstants.Positions.Name))
                 return Error.Conflict("position.name.taken", "Должность с таким названием уже существует");
 
             return saveResult.Error;

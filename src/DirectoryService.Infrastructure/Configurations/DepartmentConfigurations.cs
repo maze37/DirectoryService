@@ -1,5 +1,6 @@
 ﻿using DirectoryService.Domain;
 using DirectoryService.Domain.Department;
+using DirectoryService.Domain.Department.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,9 +17,9 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         builder.ComplexProperty(d => d.DepartmentName, nameBuilder =>
         {
             nameBuilder.Property<string>(n => n.Value)
-                .HasColumnName("departmentName")
+                .HasColumnName("name")
                 .IsRequired()
-                .HasMaxLength(LenghtConstants.MAXLENGHT);
+                .HasMaxLength(DepartmentName.MAX_NAME_LENGHT);
         });
         
         builder.ComplexProperty(d => d.Identifier, idBuilder =>
@@ -26,7 +27,7 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
             idBuilder.Property<string>(n => n.Value)
                 .HasColumnName("identifier")
                 .IsRequired()
-                .HasMaxLength(LenghtConstants.MAXLENGHT);
+                .HasMaxLength(Identifier.IDENTIFIER_MAX_LENGTH);
         });
         
         builder.ComplexProperty(d => d.Path, pathBuilder =>

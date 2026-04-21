@@ -19,13 +19,15 @@ public class DepartmentName : ValueObject
     public static Result<DepartmentName, Error> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return GeneralErrors.ValueIsRequired("departmentName");
+            return GeneralErrors.ValueIsRequired("department.name");
+
+        value = value.Trim();
 
         if (value.Length < MIN_NAME_LENGHT)
-            return GeneralErrors.ValueIsInvalid("departmentName", $"Название не может быть короче {MIN_NAME_LENGHT} символов");
+            return GeneralErrors.ValueIsInvalid("department.name", $"Название не может быть короче {MIN_NAME_LENGHT} символов");
 
         if (value.Length > MAX_NAME_LENGHT)
-            return GeneralErrors.ValueIsInvalid("departmentName", $"Название не может быть длиннее {MAX_NAME_LENGHT} символов");
+            return GeneralErrors.ValueIsInvalid("department.name", $"Название не может быть длиннее {MAX_NAME_LENGHT} символов");
         
         return new DepartmentName(value);
     }

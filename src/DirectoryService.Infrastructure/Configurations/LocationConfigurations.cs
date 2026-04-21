@@ -1,7 +1,8 @@
 ﻿using DirectoryService.Domain;
+using DirectoryService.Domain.Location;
+using DirectoryService.Domain.Location.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using DirectoryService.Domain.Location;
 
 namespace DirectoryService.Infrastructure.Configurations;
 
@@ -16,9 +17,9 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
         builder.ComplexProperty(l => l.Name, nameBuilder =>
         {
             nameBuilder.Property<string>(n => n.Value)
-                .HasColumnName("departmentName")
+                .HasColumnName("name")
                 .IsRequired()
-                .HasMaxLength(LenghtConstants.MAXLENGHT);
+                .HasMaxLength(LocationName.MAX_NAME_LENGHT);
         });
         
         builder.ComplexProperty(l => l.Address, addrBuilder =>

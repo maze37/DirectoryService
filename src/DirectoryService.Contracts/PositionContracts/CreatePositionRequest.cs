@@ -1,1 +1,6 @@
-﻿namespace DirectoryService.Contracts.PositionContracts;
+namespace DirectoryService.Contracts.PositionContracts;
+
+public record CreatePositionRequest(
+    string Name,
+    string? Description,
+    Guid[] DepartmentIds);

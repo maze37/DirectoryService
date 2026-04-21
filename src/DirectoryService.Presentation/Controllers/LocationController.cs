@@ -9,7 +9,7 @@ using ILogger = Serilog.ILogger;
 namespace DirectoryService.Presentation.Controllers;
 
 [ApiController]
-[Route("/api/locations")]
+[Route("api/locations")]
 public class LocationController : ControllerBase
 {
     private readonly ICommandHandler<CreateLocationCommand, CreateLocationResponse> _createHandler;
