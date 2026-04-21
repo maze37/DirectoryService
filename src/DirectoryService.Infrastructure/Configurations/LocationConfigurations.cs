@@ -80,4 +80,4 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
             .WithOne()
             .HasForeignKey(dl => dl.LocationId);
     }
-} 
+}

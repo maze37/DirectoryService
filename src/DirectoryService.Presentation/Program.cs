@@ -17,7 +17,7 @@ try
 
     var app = builder.Build();
 
-    app.ConfigureExtensions();
+    await app.ConfigureExtensions();
     app.MapControllers();
 
     await app.RunAsync().ConfigureAwait(false);

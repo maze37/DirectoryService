@@ -28,10 +28,7 @@ public class LocationControllers : ControllerBase
         [FromBody] CreateLocationRequest location,
         CancellationToken cancellationToken = default)
     {
-        var command = new CreateLocationCommand(
-            location.Name,
-            location.Address,
-            location.Timezone);
+        var command = new CreateLocationCommand(location);
 
         var result = await _createHandler.HandleAsync(command, cancellationToken);
 
