@@ -10,12 +10,12 @@ namespace DirectoryService.Presentation.Controllers;
 
 [ApiController]
 [Route("api/departments")]
-public class DepartmentControllers : ControllerBase
+public class DepartmentController : ControllerBase
 {
     private readonly ICommandHandler<CreateDepartmentCommand, CreateDepartmentResponse> _createHandler;
     private readonly ILogger _logger;
     
-    public DepartmentControllers(
+    public DepartmentController(
         ICommandHandler<CreateDepartmentCommand, CreateDepartmentResponse> createHandler,
         ILogger logger)
     {

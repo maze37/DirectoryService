@@ -1,6 +1,9 @@
-﻿using DirectoryService.Application.Abstractions;
+﻿using System.Linq.Expressions;
+using CSharpFunctionalExtensions;
+using DirectoryService.Application.Abstractions;
 using DirectoryService.Domain.Department;
 using Microsoft.EntityFrameworkCore;
+using Shared.Result;
 
 namespace DirectoryService.Infrastructure.Repositories;
 
@@ -18,9 +21,31 @@ public class DepartmentRepository : IDepartmentRepository
         await _context.Departments.AddAsync(department, cancellationToken);
     }
 
-    public async Task<Department?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Result<Department, Error>> GetByAsync(
+        Expression<Func<Department, bool>> predicate,
+        CancellationToken cancellationToken = default)
+    {
+        var department = await _context.Departments
+            .FirstOrDefaultAsync(predicate, cancellationToken);
+
+        if (department is null)
+            return Errors.General.NotFound(name: "department");
+
+        return department;
+    }
+
+    public async Task<bool> AllExistAndActiveAsync(Guid[] ids, CancellationToken cancellationToken = default)
+    {
+        var count = await _context.Departments
+            .Where(d => ids.Contains(d.Id) && d.IsActive)
+            .CountAsync(cancellationToken);
+
+        return count == ids.Length;
+    }
+
+    public async Task<bool> ExistsByIdentifierAsync(string identifier, CancellationToken cancellationToken = default)
     {
         return await _context.Departments
-            .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+            .AnyAsync(d => d.Identifier.Value == identifier, cancellationToken);
     }
 }
