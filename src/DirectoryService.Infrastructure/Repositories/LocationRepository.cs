@@ -22,13 +22,13 @@ public class LocationRepository : ILocationRepository
     }
 
     public async Task<bool> AllExistAsync(
-        Guid[] locationIds, 
+        IReadOnlyList<Guid> locationIds, 
         CancellationToken cancellationToken = default)
     {
         var existingCount = await _context.Locations
             .Where(l => locationIds.Contains(l.Id))
             .CountAsync(cancellationToken);
         
-        return existingCount == locationIds.Length;
+        return existingCount == locationIds.Count;
     }
 }

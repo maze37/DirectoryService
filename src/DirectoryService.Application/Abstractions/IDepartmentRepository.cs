@@ -13,4 +13,5 @@ public interface IDepartmentRepository
         CancellationToken cancellationToken = default);
     Task<bool> AllExistAndActiveAsync(Guid[] ids, CancellationToken cancellationToken = default);
     Task<bool> ExistsByIdentifierAsync(string identifier, CancellationToken cancellationToken = default);
+    Task UpdateLocationsAsync(Department department, CancellationToken cancellationToken = default);
 }
