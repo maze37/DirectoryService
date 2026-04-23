@@ -30,8 +30,14 @@ public class TransactionManager : ITransactionManager
                     "record.already.exist",
                     "Unique constraint violated",
                     pgEx.ConstraintName);
-            
-            throw;
+
+            return Error.Failure(
+                "db.update.failed",
+                "Database update failed");
+        }
+        catch (DbUpdateException)
+        {
+            return Error.Failure("db.update.failed", "Database update failed");
         }
     }
 }

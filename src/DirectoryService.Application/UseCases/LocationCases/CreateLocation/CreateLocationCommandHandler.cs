@@ -1,13 +1,12 @@
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
+using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
 using FluentValidation;
 using Serilog;
 using Shared.Core;
-using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace DirectoryService.Application.UseCases.LocationCases.CreateLocation;
 
@@ -38,11 +37,8 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         CancellationToken cancellationToken)
     {
         var validationResult = await _validator.ValidateAsync(command, cancellationToken);
-
         if (!validationResult.IsValid)
-        {
             return validationResult.ToError();
-        }
         
         var locationResult = Location.Create(
             Guid.NewGuid(),
@@ -54,25 +50,22 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         if (locationResult.IsFailure)
             return locationResult.Error;
 
-        _logger.Information("Локация с названием: {LocationName} успешно создана", locationResult.Value.Name);
-
         await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
         
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
         {
-            // Уточняем ошибку по имени constraint
-            var constraintName = saveResult.Error.Message;
+            var constraint = saveResult.Error.InvalidField ?? "";
         
-            if (constraintName.Contains("ix_locations_name"))
+            if (constraint.Contains(IndexConstants.Locations.Name))
                 return Error.Conflict("location.name.taken", "Локация с таким названием уже существует");
         
-            if (constraintName.Contains("ix_locations_address"))
+            if (constraint.Contains(IndexConstants.Locations.Address))
                 return Error.Conflict("location.address.taken", "Локация с таким адресом уже существует");
         
             return saveResult.Error;
         }
-        
+
         _logger.Information("Локация {Name} создана", locationResult.Value.Name.Value);
         return new CreateLocationResponse(locationResult.Value.Id);
     }

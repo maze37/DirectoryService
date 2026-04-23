@@ -9,18 +9,18 @@ using ILogger = Serilog.ILogger;
 namespace DirectoryService.Presentation.Controllers;
 
 [ApiController]
-[Route("/api/locations")]
-public class LocationControllers : ControllerBase
+[Route("api/locations")]
+public class LocationController : ControllerBase
 {
     private readonly ICommandHandler<CreateLocationCommand, CreateLocationResponse> _createHandler;
     private readonly ILogger _logger;
 
-    public LocationControllers(
+    public LocationController(
         ICommandHandler<CreateLocationCommand, CreateLocationResponse> createHandler,
         ILogger logger)
     {
         _createHandler = createHandler ?? throw new ArgumentNullException(nameof(createHandler));
-        _logger = logger.ForContext<LocationControllers>();
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     [HttpPost]

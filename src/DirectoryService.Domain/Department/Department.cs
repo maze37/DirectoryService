@@ -24,7 +24,7 @@ public sealed class Department : AggregateRoot
     /// <summary>
     /// Название отдела.
     /// </summary>
-    public Name Name { get; private set; } = null!;
+    public DepartmentName DepartmentName { get; private set; } = null!;
 
     /// <summary>
     /// Идентификатор отдела.
@@ -75,7 +75,7 @@ public sealed class Department : AggregateRoot
 
     public Department(
         Guid id,
-        Name name,
+        DepartmentName departmentName,
         Identifier identifier,
         Guid? parentId,
         Path path,
@@ -86,7 +86,7 @@ public sealed class Department : AggregateRoot
         IEnumerable<DepartmentLocation> departmentLocations,
         IEnumerable<DepartmentPosition> departmentPositions) : base(id)
     {
-        Name = name;
+        DepartmentName = departmentName;
         Identifier = identifier;
         ParentId = parentId;
         Path = path;
@@ -105,12 +105,14 @@ public sealed class Department : AggregateRoot
         Guid id,
         string name,
         string identifier,
-        DateTimeOffset createdWhen)
+        int depth,
+        DateTimeOffset createdWhen,
+        List<DepartmentLocation> departmentLocations)
     {
         if (id == Guid.Empty)
             return GeneralErrors.ValueIsInvalid("id", "ID не может быть пустым");
         
-        var nameResult = Name.Create(name);
+        var nameResult = DepartmentName.Create(name);
         if (nameResult.IsFailure)
             return nameResult.Error;
 
@@ -130,7 +132,42 @@ public sealed class Department : AggregateRoot
             parent: null,
             createdWhen,
             children: [],
-            departmentLocations: new List<DepartmentLocation>(),
+            departmentLocations:  departmentLocations,
+            departmentPositions: new List<DepartmentPosition>());
+    }
+
+    public static Result<Department, Error> CreateChild(
+        Guid id,
+        string name,
+        string identifier,
+        Department parentDepartment,
+        DateTimeOffset createdWhen,
+        List<DepartmentLocation> departmentLocations)
+    {
+        if (id == Guid.Empty)
+            return GeneralErrors.ValueIsInvalid("id", "ID не может быть пустым");
+
+        var nameResult = DepartmentName.Create(name);
+        if (nameResult.IsFailure)
+            return nameResult.Error;
+
+        var identifierResult = Identifier.Create(identifier);
+        if (identifierResult.IsFailure)
+            return identifierResult.Error;
+        
+        var path = parentDepartment.Path.CreateChild(identifierResult.Value);
+        
+        return new Department(
+            id,
+            nameResult.Value,
+            identifierResult.Value,
+            parentId: parentDepartment.Id,
+            path,
+            depth: parentDepartment.Depth + 1,
+            parent: parentDepartment,
+            createdWhen,
+            children: [],
+            departmentLocations: departmentLocations,
             departmentPositions: new List<DepartmentPosition>());
     }
 }

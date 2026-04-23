@@ -4,7 +4,7 @@ using Shared.Core;
 namespace DirectoryService.Application.Abstractions;
 
 /// <summary>
-/// UnitOfWork Паттерн
+/// UnitOfWork-Паттерн
 /// </summary>
 public interface ITransactionManager
 {

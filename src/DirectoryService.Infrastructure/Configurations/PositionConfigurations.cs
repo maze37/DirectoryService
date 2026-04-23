@@ -1,5 +1,6 @@
 ﻿using DirectoryService.Domain;
 using DirectoryService.Domain.Position;
+using DirectoryService.Domain.Position.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,13 +23,13 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
             nameBuilder.Property<string>(n => n.Value)
                 .HasColumnName("name")
                 .IsRequired()
-                .HasMaxLength(LenghtConstants.MAXLENGHT);
+                .HasMaxLength(PositionName.MAX_NAME_LENGHT);
         });
         
         builder.Property(p => p.Description)
             .HasColumnName("description")
             .IsRequired(false)
-            .HasMaxLength(1000);
+            .HasMaxLength(LenghtConstants.MAXLENGHT);
         
         builder.Property(p => p.IsActive)
             .HasColumnName("is_active")

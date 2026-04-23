@@ -11,7 +11,7 @@ public class CreateLocationCommandValidator : AbstractValidator<CreateLocationCo
     {
         RuleFor(x => x.Request.Name)
             .NotEmpty()
-                .WithErrorCode("location.name.required")
+                .WithErrorCode("location.required")
                 .WithMessage("Название локации обязательно")
             .MustBeValueObject(LocationName.Create);
 

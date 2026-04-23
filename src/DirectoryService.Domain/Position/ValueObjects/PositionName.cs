@@ -19,13 +19,15 @@ public class PositionName : ValueObject
     public static Result<PositionName, Error> Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return GeneralErrors.ValueIsInvalid("value", "Название позиции не может быть пустым.");
+            return GeneralErrors.ValueIsRequired("position.name");
+
+        value = value.Trim();
 
         if (value.Length < MIN_NAME_LENGTH)
-            return GeneralErrors.ValueIsInvalid("value.Lenght",$"Название позиции не может быть меньше {MIN_NAME_LENGTH} символов.");
+            return GeneralErrors.ValueIsInvalid("position.name", $"Название позиции не может быть меньше {MIN_NAME_LENGTH} символов.");
 
         if (value.Length > MAX_NAME_LENGHT)
-            return GeneralErrors.ValueIsInvalid("value.Lenght", $"Название позиции не может быть больше {MAX_NAME_LENGHT} символов.");
+            return GeneralErrors.ValueIsInvalid("position.name", $"Название позиции не может быть больше {MAX_NAME_LENGHT} символов.");
 
         return new PositionName(value);
     }
