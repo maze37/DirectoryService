@@ -1,4 +1,5 @@
 using CSharpFunctionalExtensions;
+using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department.ValueObjects;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.DepartmentPositions;
@@ -169,5 +170,12 @@ public sealed class Department : AggregateRoot
             children: [],
             departmentLocations: departmentLocations,
             departmentPositions: new List<DepartmentPosition>());
+    }
+
+    public void UpdateLocations(List<DepartmentLocation> newLocations, DateTimeOffset updatedWhen)
+    {
+        _departmentLocations.Clear();
+        _departmentLocations.AddRange(newLocations);
+        UpdatedWhen = updatedWhen;
     }
 }

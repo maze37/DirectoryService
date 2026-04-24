@@ -57,4 +57,17 @@ public class DepartmentRepository : IDepartmentRepository
         return await _context.Departments
             .AnyAsync(d => d.Identifier.Value == identifier, cancellationToken);
     }
+
+    public async Task UpdateLocationsAsync(
+        Department department, 
+        CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.DepartmentLocations
+            .Where(dl => dl.DepartmentId == department.Id)
+            .ToListAsync(cancellationToken);
+
+        _context.DepartmentLocations.RemoveRange(existing);
+        
+        await _context.DepartmentLocations.AddRangeAsync(department.Locations, cancellationToken);
+    }
 }
