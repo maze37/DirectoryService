@@ -29,12 +29,12 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         ILogger logger,
         IValidator<CreateDepartmentCommand> validator)
     {
-        _departmentRepository = departmentRepository ?? throw new ArgumentNullException(nameof(departmentRepository));
-        _locationRepository = locationRepository ?? throw new ArgumentNullException(nameof(locationRepository));
-        _transactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
-        _dateTime = dateTime ?? throw new ArgumentNullException(nameof(dateTime));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _departmentRepository = departmentRepository;
+        _locationRepository = locationRepository;
+        _transactionManager = transactionManager;
+        _dateTime = dateTime;
+        _logger = logger;
+        _validator = validator;
     }
 
     public async Task<Result<CreateDepartmentResponse, Error>> HandleAsync(

@@ -25,11 +25,11 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         ILogger logger,
         IValidator<CreateLocationCommand> validator)
     {
-        _locationRepository = locationRepository ?? throw new ArgumentNullException(nameof(locationRepository));
-        _date = date ?? throw new ArgumentNullException(nameof(date));
-        _transactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
+        _locationRepository = locationRepository;
+        _date = date;
+        _transactionManager = transactionManager;
         _logger = logger ?? throw new ArgumentException(nameof(logger));
-        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _validator = validator;
     }
 
     public async Task<Result<CreateLocationResponse, Error>> HandleAsync(

@@ -29,12 +29,12 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
         IValidator<CreatePositionCommand> validator,
         ILogger logger)
     {
-        _positionRepository = positionRepository ?? throw new ArgumentNullException(nameof(positionRepository));
-        _departmentRepository = departmentRepository ?? throw new ArgumentNullException(nameof(departmentRepository));
-        _transactionManager = transactionManager ?? throw new ArgumentNullException(nameof(transactionManager));
-        _dateTime = dateTime ?? throw new ArgumentNullException(nameof(dateTime));
-        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _positionRepository = positionRepository;
+        _departmentRepository = departmentRepository;
+        _transactionManager = transactionManager;
+        _dateTime = dateTime;
+        _validator = validator;
+        _logger = logger;
     }
 
     public async Task<Result<CreatePositionResponse, Error>> HandleAsync(
