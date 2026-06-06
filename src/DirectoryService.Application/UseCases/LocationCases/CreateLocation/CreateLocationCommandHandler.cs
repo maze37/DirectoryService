@@ -28,7 +28,7 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         _locationRepository = locationRepository;
         _date = date;
         _transactionManager = transactionManager;
-        _logger = logger ?? throw new ArgumentException(nameof(logger));
+        _logger = logger;
         _validator = validator;
     }
 
@@ -50,7 +50,7 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         if (locationResult.IsFailure)
             return locationResult.Error;
 
-        await _locationRepository.AddAsync(locationResult.Value, cancellationToken);
+        _locationRepository.Add(locationResult.Value);
         
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)

@@ -98,7 +98,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         if (departmentResult.IsFailure)
             return departmentResult.Error;
         
-        await _departmentRepository.AddAsync(departmentResult.Value, cancellationToken);
+        _departmentRepository.Add(departmentResult.Value);
 
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
@@ -110,7 +110,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
 
             return saveResult.Error;
         }
-
+        
         _logger.Information("Отдел {Name} создан", command.Request.Name);
         return new CreateDepartmentResponse(departmentResult.Value.Id);
     }

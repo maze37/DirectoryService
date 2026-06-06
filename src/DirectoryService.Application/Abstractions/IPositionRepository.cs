@@ -4,6 +4,6 @@ namespace DirectoryService.Application.Abstractions;
 
 public interface IPositionRepository
 {
-    Task AddAsync(Position position, CancellationToken cancellationToken = default);
+    void Add(Position position);
     Task<bool> ExistsActiveWithNameAsync(string name, CancellationToken cancellationToken = default);
 }

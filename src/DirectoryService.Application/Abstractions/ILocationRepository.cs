@@ -4,6 +4,6 @@ namespace DirectoryService.Application.Abstractions;
 
 public interface ILocationRepository
 {
-    Task AddAsync(Location location, CancellationToken cancellationToken = default);
+    void Add(Location location);
     Task<bool> AllExistAsync(IReadOnlyList<Guid> locationIds, CancellationToken cancellationToken = default);
 }

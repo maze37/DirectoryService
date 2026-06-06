@@ -16,9 +16,9 @@ public class DepartmentRepository : IDepartmentRepository
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }
 
-    public async Task AddAsync(Department department, CancellationToken cancellationToken = default)
+    public void Add(Department department)
     {
-        await _context.Departments.AddAsync(department, cancellationToken);
+        _context.Departments.Add(department);
     }
 
     public async Task<Result<Department, Error>> GetByAsync(
@@ -36,6 +36,29 @@ public class DepartmentRepository : IDepartmentRepository
             return department;
         }
         catch (Exception)
+        {
+            return Error.Failure("department.get.failed", "Не удалось получить подразделение");
+        }
+    }
+
+    public async Task<Result<Department, Error>> GetByIdWithLockAsync(
+        Guid departmentId, 
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var department = await _context.Departments
+                .FromSqlRaw("SELECT * FROM departments WHERE id = {0} FOR UPDATE", departmentId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (department is null)
+            {
+                return Errors.General.NotFound(name: "department");
+            }
+
+            return department;
+        }
+        catch (Exception ex)
         {
             return Error.Failure("department.get.failed", "Не удалось получить подразделение");
         }

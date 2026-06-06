@@ -11,6 +11,8 @@ public class DepartmentName : ValueObject
     
     public string Value { get; }
     
+    public static DepartmentName From(string value) => new DepartmentName(value);
+    
     private DepartmentName(string value)
     {
         Value = value;

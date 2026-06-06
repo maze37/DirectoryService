@@ -10,7 +10,7 @@ public abstract class AggregateRoot : Entity
     /// <summary>
     /// Версия записи в БД.
     /// </summary>
-    public int Version { get; private set; }
+    public uint Version { get; private set; }
     
     /// <summary>
     /// Увелечение версии для записи.

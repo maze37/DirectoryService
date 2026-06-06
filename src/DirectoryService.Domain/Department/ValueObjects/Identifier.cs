@@ -11,6 +11,8 @@ public class Identifier : ValueObject
     public const int IDENTIFIER_MAX_LENGTH = 150;
     
     public string Value { get; }
+
+    public static Identifier From(string value) => new Identifier(value);
     
     private Identifier(string value)
     {

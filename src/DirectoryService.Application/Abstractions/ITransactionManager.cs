@@ -1,5 +1,5 @@
-﻿using CSharpFunctionalExtensions;
-using Shared.Core;
+﻿using System.Data;
+using CSharpFunctionalExtensions;
 
 namespace DirectoryService.Application.Abstractions;
 
@@ -8,5 +8,9 @@ namespace DirectoryService.Application.Abstractions;
 /// </summary>
 public interface ITransactionManager
 {
-    Task<Result<Unit, Error>> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<UnitResult<Error>> SaveChangesAsync(CancellationToken cancellationToken);
+
+    Task<Result<ITransactionScope, Error>> BeginTransactionAsync(
+        CancellationToken cancellationToken = default,
+        IsolationLevel? level = null);
 }
