@@ -33,11 +33,18 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         
         builder.Property(d => d.Path)
             .HasColumnName("path")
+            .HasColumnType("ltree")
             .HasConversion(
                 path => path.Value,
                 value => Path.From(value))
             .IsRequired()
             .HasMaxLength(LenghtConstants.MAXLENGHT);
+
+        builder.HasIndex(pi => pi.Path)
+            .HasMethod("gist")
+            .HasDatabaseName("idx_departments_path");
+        
+        
 
         builder.Property(c => c.ChildrenCount).HasColumnName("children_count").IsRequired();
         builder.Property(d => d.Depth).HasColumnName("depth").IsRequired();
@@ -68,6 +75,7 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         
         builder.HasMany<Department>()
             .WithOne(x => x.Parent)
+            
             .IsRequired(false)
             .HasForeignKey(d => d.ParentId)
             .OnDelete(DeleteBehavior.Restrict);

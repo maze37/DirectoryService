@@ -1,3 +1,3 @@
 ﻿namespace DirectoryService.Contracts.DepartmentContracts;
 
-public record MoveDepartmentResponse(Guid DepartmentId);
+public record MoveDepartmentResponse(Guid MovedDepartmentId);

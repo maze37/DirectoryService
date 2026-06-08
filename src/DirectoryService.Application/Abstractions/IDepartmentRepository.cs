@@ -15,8 +15,23 @@ public interface IDepartmentRepository
     Task<Result<Department, Error>> GetByIdWithLockAsync(
         Guid departmentId,
         CancellationToken cancellationToken = default);
+
+    // блокирует потомков
+    Task LockDescendantsAsync(string oldPath, CancellationToken cancellationToken);
+
+    // True, если это дети этого отдела, если это тот и отдел.
+    Task<bool> IsDescendantOrSelfAsync(string potentialParentPath, string departmentPath, CancellationToken cancellationToken);
+
+    Task MoveDepartmentAsync(
+        string oldPath,
+        string newParentPath,
+        Guid departmentId,
+        Guid? newParentId,
+        CancellationToken cancellationToken = default);
     
     Task<bool> AllExistAndActiveAsync(Guid[] ids, CancellationToken cancellationToken = default);
+    
     Task<bool> ExistsByIdentifierAsync(string identifier, CancellationToken cancellationToken = default);
+    
     Task UpdateLocationsAsync(Department department, CancellationToken cancellationToken = default);
 }

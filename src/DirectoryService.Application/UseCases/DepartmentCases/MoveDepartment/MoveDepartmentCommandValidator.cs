@@ -8,7 +8,7 @@ public class MoveDepartmentCommandValidator : AbstractValidator<MoveDepartmentCo
     {
         RuleFor(x => x.DepartmentId)
             .NotNull()
-            .WithErrorCode("move.department.parentId.required")
+            .WithErrorCode("move.department.departmentId.required")
             .WithMessage("Айди подразделения обязателен.")
             .NotEmpty();
     }
