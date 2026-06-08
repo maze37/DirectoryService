@@ -48,7 +48,7 @@ public class DepartmentRepository : IDepartmentRepository
         try
         {
             var department = await _context.Departments
-                .FromSqlRaw("SELECT * FROM departments WHERE id = {0} FOR UPDATE", departmentId)
+                .FromSql($"SELECT * FROM departments WHERE id = {departmentId} FOR UPDATE")
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (department is null)

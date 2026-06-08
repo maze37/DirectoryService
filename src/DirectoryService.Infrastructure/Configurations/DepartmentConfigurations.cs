@@ -59,17 +59,18 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.Navigation(d => d.Children)
-            .HasField("_children")
+            .HasField("_childrenDepartments")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
         
         builder.Navigation(d => d.Positions)
             .HasField("_departmentPositions")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
         
-        builder.HasOne(d => d.Parent)
-            .WithMany(d => d.Children)
+        builder.HasMany<Department>()
+            .WithOne(x => x.Parent)
+            .IsRequired(false)
             .HasForeignKey(d => d.ParentId)
-            .IsRequired(false);
+            .OnDelete(DeleteBehavior.Restrict);
         
         builder.Property(d => d.Version)
             .IsRowVersion();

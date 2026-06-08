@@ -1,5 +1,4 @@
 using CSharpFunctionalExtensions;
-using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department.ValueObjects;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.DepartmentPositions;
@@ -14,13 +13,14 @@ namespace DirectoryService.Domain.Department;
 /// </summary>
 public sealed class Department : AggregateRoot
 {
-    private readonly List<Department> _children  = [];
+    
     private readonly List<DepartmentLocation> _departmentLocations = [];
     private readonly List<DepartmentPosition> _departmentPositions = [];
+    private readonly List<Department> _childrenDepartments  = [];
     
     public IReadOnlyList<DepartmentLocation> Locations => _departmentLocations.AsReadOnly();
     public IReadOnlyList<DepartmentPosition> Positions => _departmentPositions.AsReadOnly();
-    public IReadOnlyList<Department> Children => _children.AsReadOnly();
+    public IReadOnlyList<Department> Children => _childrenDepartments.AsReadOnly();
     
     /// <summary>
     /// Название отдела.
@@ -97,7 +97,7 @@ public sealed class Department : AggregateRoot
         CreatedWhen = createdWhen;
         UpdatedWhen = createdWhen;
         Parent = parent;
-        _children = children;
+        _childrenDepartments = children;
         _departmentLocations = departmentLocations.ToList();
         _departmentPositions = departmentPositions.ToList();
     }
