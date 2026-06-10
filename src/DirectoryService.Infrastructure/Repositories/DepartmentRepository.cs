@@ -53,7 +53,7 @@ public class DepartmentRepository : IDepartmentRepository
             var department = await _context.Departments
                     .FromSqlRaw("""
                                 SELECT id, parent_id, depth, children_count, is_active, 
-                                       created_when, updated_when, name, identifier, path, xmin
+                                       created_when, updated_when, name, Slug, path, xmin
                                 FROM departments 
                                 WHERE id = {0} 
                                 FOR UPDATE
@@ -84,10 +84,10 @@ public class DepartmentRepository : IDepartmentRepository
     {
         identifier = identifier.Trim();
         
-        var identifierValue = Identifier.From(identifier);
+        var identifierValue = Slug.From(identifier);
 
         return await _context.Departments
-            .AnyAsync(d => d.Identifier == identifierValue, cancellationToken);
+            .AnyAsync(d => d.Slug == identifierValue, cancellationToken);
     }
 
     public async Task UpdateLocationsAsync(

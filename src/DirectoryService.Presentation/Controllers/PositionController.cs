@@ -1,4 +1,5 @@
 using DirectoryService.Application.UseCases.PositionCases.CreatePosition;
+using DirectoryService.Application.UseCases.PositionCases.RenamePosition;
 using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
@@ -13,14 +14,17 @@ namespace DirectoryService.Presentation.Controllers;
 public class PositionController : ControllerBase
 {
     private readonly ICommandHandler<CreatePositionCommand, CreatePositionResponse> _createHandler;
-    private readonly ILogger _logger;
+    private readonly ICommandHandler<RenamePositionCommand, RenamePositionResponse> _renameHandler;
+    private readonly ILogger<PositionController> _logger;
 
     public PositionController(
         ICommandHandler<CreatePositionCommand, CreatePositionResponse> createHandler,
-        ILogger logger)
+        ICommandHandler<RenamePositionCommand, RenamePositionResponse> renameHandler,
+        ILogger<PositionController> logger)
     {
-        _createHandler = createHandler ?? throw new ArgumentNullException(nameof(createHandler));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _createHandler = createHandler;
+        _renameHandler = renameHandler;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -33,11 +37,28 @@ public class PositionController : ControllerBase
 
         if (result.IsFailure)
         {
-            _logger.Error("Ошибка создания позиции: {Error}", result.Error.ToResponse());
+            _logger.LogError("Ошибка создания позиции: {Error}", result.Error.ToResponse());
             return result.Error.ToResponse();
         }
 
-        _logger.Information("Позиция с ID: {PositionId} успешно создана", result.Value.Id);
+        _logger.LogInformation("Позиция с ID: {PositionId} успешно создана", result.Value.Id);
+        return Ok(Envelope.Ok(result.Value));
+    }
+
+    [HttpPatch("{id:guid}")]
+    public async Task<IActionResult> RenameAsync(
+        [FromRoute] Guid id,
+        [FromBody] RenamePositionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new RenamePositionCommand(id, request);
+
+        var result = await _renameHandler.HandleAsync(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return result.Error.ToResponse();
+        }
+
         return Ok(Envelope.Ok(result.Value));
     }
 }

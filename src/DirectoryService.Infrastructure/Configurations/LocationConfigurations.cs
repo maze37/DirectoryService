@@ -65,5 +65,8 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
         builder.HasMany(p => p.DepartmentLocations)
             .WithOne()
             .HasForeignKey(dl => dl.LocationId);
+        
+        builder.Property(d => d.Version)
+            .IsRowVersion();
     }
 }

@@ -16,14 +16,14 @@ public class Path : ValueObject
         Value = value;
     }
 
-    public static Path CreateParent(Identifier identifier)
+    public static Path CreateParent(Slug slug)
     {
-        return new Path(identifier.Value);
+        return new Path(slug.Value);
     }
     
-    public Path CreateChild(Identifier childIdentifier)
+    public Path CreateChild(Slug childSlug)
     {
-        return new Path(Value + SEPARATOR + childIdentifier.Value);
+        return new Path(Value + SEPARATOR + childSlug.Value);
     }
 
     protected override IEnumerable<object> GetEqualityComponents()

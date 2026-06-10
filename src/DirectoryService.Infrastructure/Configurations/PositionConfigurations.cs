@@ -18,13 +18,13 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
             .HasColumnName("id")
             .ValueGeneratedNever();
         
-        builder.ComplexProperty(p => p.Name, nameBuilder =>
-        {
-            nameBuilder.Property<string>(n => n.Value)
-                .HasColumnName("name")
-                .IsRequired()
-                .HasMaxLength(PositionName.MAX_NAME_LENGHT);
-        });
+        builder.Property(p => p.Name)
+            .HasColumnName("name")
+            .HasConversion(
+                name => name.Value,
+                value => PositionName.From(value))
+            .IsRequired()
+            .HasMaxLength(PositionName.MAX_NAME_LENGHT);
         
         builder.Property(p => p.Description)
             .HasColumnName("description")
@@ -46,5 +46,10 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
         builder.HasMany(p => p.DepartmentPosition)
             .WithOne()
             .HasForeignKey(dp => dp.PositionId);
+
+        builder.Property(p => p.Version)
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .IsRowVersion();
     }
 }
