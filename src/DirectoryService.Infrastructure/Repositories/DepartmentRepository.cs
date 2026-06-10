@@ -122,8 +122,8 @@ public class DepartmentRepository : IDepartmentRepository
         // для одного значения (bool) в даппере можно юзать ExecuteScalarAsync
         var result = await dbConn.ExecuteScalarAsync<bool>(dapperSql, new
         {
-            potentialParentPath,
-            departmentPath
+            potentialParentPath = potentialParentPath.Value,
+            departmentPath = departmentPath.Value
         });
         return result;
     }
@@ -139,7 +139,7 @@ public class DepartmentRepository : IDepartmentRepository
         var dbConn = _context.Database.GetDbConnection();
         await dbConn.ExecuteAsync(new CommandDefinition(
             dapperSql, 
-            new { oldPath }, 
+            new { oldPath = oldPath.Value }, 
             cancellationToken: cancellationToken));
     }
 
