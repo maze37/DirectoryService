@@ -7,6 +7,7 @@ using DirectoryService.Domain.Department;
 using Microsoft.EntityFrameworkCore;
 using Shared.Result;
 using Dapper;
+using DirectoryService.Domain.Department.ValueObjects;
 
 namespace DirectoryService.Infrastructure.Repositories;
 
@@ -51,19 +52,23 @@ public class DepartmentRepository : IDepartmentRepository
         try
         {
             var department = await _context.Departments
-                .FromSql($"SELECT * FROM departments WHERE id = {departmentId} FOR UPDATE")
-                .FirstOrDefaultAsync(cancellationToken);
+                    .FromSqlRaw("""
+                                SELECT id, parent_id, depth, children_count, is_active, 
+                                       created_when, updated_when, name, identifier, path, xmin
+                                FROM departments 
+                                WHERE id = {0} 
+                                FOR UPDATE
+                                """, departmentId)
+                    .FirstOrDefaultAsync(cancellationToken);
 
             if (department is null)
-            {
                 return Errors.General.NotFound(name: "department");
-            }
 
             return department;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return Error.Failure("department.get.failed", "Не удалось получить подразделение");
+            return Error.Failure("department.get.failed", ex.Message);
         }
     }
 
@@ -79,9 +84,11 @@ public class DepartmentRepository : IDepartmentRepository
     public async Task<bool> ExistsByIdentifierAsync(string identifier, CancellationToken cancellationToken = default)
     {
         identifier = identifier.Trim();
+        
+        var identifierValue = Identifier.From(identifier);
 
         return await _context.Departments
-            .AnyAsync(d => d.Identifier.Value == identifier, cancellationToken);
+            .AnyAsync(d => d.Identifier == identifierValue, cancellationToken);
     }
 
     public async Task UpdateLocationsAsync(

@@ -44,8 +44,6 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
             .HasMethod("gist")
             .HasDatabaseName("idx_departments_path");
         
-        
-
         builder.Property(c => c.ChildrenCount).HasColumnName("children_count").IsRequired();
         builder.Property(d => d.Depth).HasColumnName("depth").IsRequired();
         builder.Property(d => d.ParentId).HasColumnName("parent_id").IsRequired(false);
@@ -73,9 +71,8 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
             .HasField("_departmentPositions")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
         
-        builder.HasMany<Department>()
+        builder.HasMany(d => d.Children)
             .WithOne(x => x.Parent)
-            
             .IsRequired(false)
             .HasForeignKey(d => d.ParentId)
             .OnDelete(DeleteBehavior.Restrict);

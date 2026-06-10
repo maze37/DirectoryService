@@ -13,14 +13,14 @@ public class MoveDepartmentCommandHandler : ICommandHandler<MoveDepartmentComman
     private readonly IDepartmentRepository _departmentRepository;
     private readonly ITransactionManager _transactionManager;
     private readonly IDateTimeProvider _dateTime;
-    private readonly ILogger _logger;
+    private readonly ILogger<MoveDepartmentCommandHandler> _logger;
     private readonly IValidator<MoveDepartmentCommand> _validator;
 
     public MoveDepartmentCommandHandler(
         IDepartmentRepository departmentRepository,
         ITransactionManager transactionManager,
         IDateTimeProvider dateTime,
-        ILogger logger,
+        ILogger<MoveDepartmentCommandHandler> logger,
         IValidator<MoveDepartmentCommand> validator)
     {
         _departmentRepository = departmentRepository;
