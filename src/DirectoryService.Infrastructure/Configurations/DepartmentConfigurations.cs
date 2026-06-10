@@ -3,6 +3,7 @@ using DirectoryService.Domain.Department;
 using DirectoryService.Domain.Department.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
 namespace DirectoryService.Infrastructure.Configurations;
 
@@ -13,30 +14,35 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         builder.ToTable("departments");
         builder.HasKey(d => d.Id);
         builder.Property(d => d.Id).HasColumnName("id");
+
+        builder.Property(d => d.DepartmentName)
+            .HasColumnName("name")
+            .HasConversion(
+                name => name.Value,
+                value => DepartmentName.From(value))
+            .IsRequired()
+            .HasMaxLength(DepartmentName.MAX_NAME_LENGHT);
+
+        builder.Property(d => d.Identifier)
+            .HasColumnName("identifier")
+            .HasConversion(
+                identifier => identifier.Value,
+                value => Identifier.From(value))
+            .IsRequired()
+            .HasMaxLength(Identifier.IDENTIFIER_MAX_LENGTH);
         
-        builder.ComplexProperty(d => d.DepartmentName, nameBuilder =>
-        {
-            nameBuilder.Property<string>(n => n.Value)
-                .HasColumnName("name")
-                .IsRequired()
-                .HasMaxLength(DepartmentName.MAX_NAME_LENGHT);
-        });
-        
-        builder.ComplexProperty(d => d.Identifier, idBuilder =>
-        {
-            idBuilder.Property<string>(n => n.Value)
-                .HasColumnName("identifier")
-                .IsRequired()
-                .HasMaxLength(Identifier.IDENTIFIER_MAX_LENGTH);
-        });
-        
-        builder.ComplexProperty(d => d.Path, pathBuilder =>
-        {
-            pathBuilder.Property<string>(n => n.Value)
-                .HasColumnName("path")
-                .IsRequired()
-                .HasMaxLength(LenghtConstants.MAXLENGHT);
-        });
+        builder.Property(d => d.Path)
+            .HasColumnName("path")
+            .HasColumnType("ltree")
+            .HasConversion(
+                path => path.Value,
+                value => Path.From(value))
+            .IsRequired()
+            .HasMaxLength(LenghtConstants.MAXLENGHT);
+
+        builder.HasIndex(pi => pi.Path)
+            .HasMethod("gist")
+            .HasDatabaseName("idx_departments_path");
         
         builder.Property(c => c.ChildrenCount).HasColumnName("children_count").IsRequired();
         builder.Property(d => d.Depth).HasColumnName("depth").IsRequired();
@@ -45,11 +51,6 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         builder.Property(d => d.CreatedWhen).HasColumnName("created_when").IsRequired();
         builder.Property(d => d.UpdatedWhen).HasColumnName("updated_when").IsRequired();
 
-        builder.HasOne<Department>()
-            .WithMany(d => d.Children)
-            .HasForeignKey(d => d.ParentId)
-            .HasConstraintName("fk_departments_parent");
-
         builder.HasMany(d => d.Locations)
             .WithOne()
             .HasForeignKey(n => n.DepartmentId);
@@ -57,5 +58,26 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         builder.HasMany(d => d.Positions)
             .WithOne()
             .HasForeignKey(n => n.DepartmentId);
+
+        builder.Navigation(d => d.Locations)
+            .HasField("_departmentLocations")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(d => d.Children)
+            .HasField("_childrenDepartments")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        
+        builder.Navigation(d => d.Positions)
+            .HasField("_departmentPositions")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        
+        builder.HasMany(d => d.Children)
+            .WithOne(x => x.Parent)
+            .IsRequired(false)
+            .HasForeignKey(d => d.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        builder.Property(d => d.Version)
+            .IsRowVersion();
     }
 }

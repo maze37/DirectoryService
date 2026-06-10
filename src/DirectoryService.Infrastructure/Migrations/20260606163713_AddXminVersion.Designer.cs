@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DirectoryService.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,16 +13,17 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DirectoryService.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260606163713_AddXminVersion")]
+    partial class AddXminVersion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "ltree");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("DirectoryService.Domain.Department.Department", b =>
@@ -38,9 +40,6 @@ namespace DirectoryService.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedWhen")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_when");
-
-                    b.Property<Guid?>("DepartmentId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("DepartmentName")
                         .IsRequired()
@@ -69,7 +68,7 @@ namespace DirectoryService.Infrastructure.Migrations
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("ltree")
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("path");
 
                     b.Property<DateTimeOffset>("UpdatedWhen")
@@ -84,14 +83,7 @@ namespace DirectoryService.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
-
                     b.HasIndex("ParentId");
-
-                    b.HasIndex("Path")
-                        .HasDatabaseName("idx_departments_path");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Path"), "gist");
 
                     b.ToTable("departments", (string)null);
                 });
@@ -278,14 +270,9 @@ namespace DirectoryService.Infrastructure.Migrations
 
             modelBuilder.Entity("DirectoryService.Domain.Department.Department", b =>
                 {
-                    b.HasOne("DirectoryService.Domain.Department.Department", null)
-                        .WithMany("Children")
-                        .HasForeignKey("DepartmentId");
-
                     b.HasOne("DirectoryService.Domain.Department.Department", "Parent")
-                        .WithMany()
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId");
 
                     b.Navigation("Parent");
                 });

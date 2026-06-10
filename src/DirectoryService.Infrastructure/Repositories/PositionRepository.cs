@@ -13,9 +13,9 @@ public class PositionRepository : IPositionRepository
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }
 
-    public async Task AddAsync(Position position, CancellationToken cancellationToken = default)
+    public void Add(Position position)
     {
-        await _context.Positions.AddAsync(position, cancellationToken);
+        _context.Positions.Add(position);
     }
 
     public async Task<bool> ExistsActiveWithNameAsync(string name, CancellationToken cancellationToken = default)

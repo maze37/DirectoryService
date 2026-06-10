@@ -1,6 +1,5 @@
 ﻿using DirectoryService.Application.Abstractions;
 using DirectoryService.Domain.Location;
-using DirectoryService.Infrastructure.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace DirectoryService.Infrastructure.Repositories;
@@ -14,11 +13,9 @@ public class LocationRepository : ILocationRepository
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }
 
-    public async Task AddAsync(
-        Location location, 
-        CancellationToken cancellationToken = default)
+    public void Add(Location location)
     {
-        await _context.Locations.AddAsync(location, cancellationToken);
+        _context.Locations.Add(location);
     }
 
     public async Task<bool> AllExistAsync(

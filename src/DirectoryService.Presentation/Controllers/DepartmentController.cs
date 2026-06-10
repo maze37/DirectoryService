@@ -1,4 +1,5 @@
 ﻿using DirectoryService.Application.UseCases.DepartmentCases.CreateDepartment;
+using DirectoryService.Application.UseCases.DepartmentCases.MoveDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.UpdateDepartmentLocations;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Presentation.ResponseExtensions;
@@ -15,16 +16,19 @@ public class DepartmentController : ControllerBase
 {
     private readonly ICommandHandler<CreateDepartmentCommand, CreateDepartmentResponse> _createHandler;
     private readonly ICommandHandler<UpdateDepartmentLocationsCommand, UpdateDepartmentLocationsResponse> _updateLocationsHandler;
+    private readonly ICommandHandler<MoveDepartmentCommand, MoveDepartmentResponse> _moveHandler;
     private readonly ILogger _logger;
 
     public DepartmentController(
         ICommandHandler<CreateDepartmentCommand, CreateDepartmentResponse> createHandler,
         ICommandHandler<UpdateDepartmentLocationsCommand, UpdateDepartmentLocationsResponse> updateLocationsHandler,
+        ICommandHandler<MoveDepartmentCommand, MoveDepartmentResponse> moveHandler,
         ILogger logger)
     {
-        _createHandler = createHandler ?? throw new ArgumentNullException(nameof(createHandler));
-        _updateLocationsHandler = updateLocationsHandler ?? throw new ArgumentNullException(nameof(updateLocationsHandler));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _createHandler = createHandler;
+        _updateLocationsHandler = updateLocationsHandler;
+        _moveHandler = moveHandler;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -70,6 +74,28 @@ public class DepartmentController : ControllerBase
             "Локации подразделения {DepartmentId} успешно обновлены",
             result.Value.DepartmentId);
 
+        return Ok(Envelope.Ok(result.Value));
+    }
+
+    [HttpPut("{departmentId:guid}/parent")]
+    public async Task<IActionResult> MoveDepartmentAsync(
+        [FromRoute] Guid departmentId,
+        [FromBody] MoveDepartmentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new MoveDepartmentCommand(departmentId, request);
+
+        var result = await _moveHandler.HandleAsync(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            _logger.Error("Ошибка переноса подразделения {DepartmentId}. " +
+                          "Ошибка: {Error}", command.DepartmentId, result.Error.ToResponse());
+            
+            return result.Error.ToResponse();
+        }
+
+        _logger.Information("Подразделене успешно перенесено.");
+        
         return Ok(Envelope.Ok(result.Value));
     }
 }

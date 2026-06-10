@@ -11,7 +11,7 @@ namespace DirectoryService.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"
-                CREATE UNIQUE INDEX ix_departments_identifier 
+                CREATE UNIQUE INDEX IF NOT EXISTS ix_departments_identifier 
                 ON departments (identifier);
             ");
         }

@@ -40,30 +40,42 @@ public class UpdateDepartmentLocationsCommandHandler :
         UpdateDepartmentLocationsCommand command,
         CancellationToken cancellationToken = default)
     {
-        // 1. Валидация входящих данных
+        // Валидация входящих данных
         var validationResult = await _validator.ValidateAsync(command, cancellationToken);
         if (!validationResult.IsValid)
             return validationResult.ToError();
+
+        // Открываем транзакцию
+        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transactionScopeResult.IsFailure)
+        {
+            return transactionScopeResult.Error;
+        }
+
+        // using - вызвать dispose, тк IDispose есть у TransactionScope
+        using var transactionScope = transactionScopeResult.Value;
         
-        // 2. Проверяем - существует ли подразделение и активно ли оно
-        var departmentResult = await _departmentRepository.GetByAsync(
-            d => d.Id == command.DepartmentId, cancellationToken);
+        // Проверяем - существует ли подразделение
+        // Песеммистичная блокировка - А должен коммитнуть, только потом возьмется за свежие данные B
+        var departmentResult = await _departmentRepository.GetByIdWithLockAsync(
+            command.DepartmentId, cancellationToken);
         if (departmentResult.IsFailure)
+        {
+            transactionScope.Rollback();
             return departmentResult.Error;
+        }
         
         var department = departmentResult.Value;
-
         if (!department.IsActive)
             return Error.Failure("department.inactive", "Подразделение неактивно");
 
-        // 3. Проверяем — все locationIds существуют и активны
+        // Проверяем, что все locationIds существуют и активны
         var allLocationsExist = await _locationRepository
             .AllExistAsync(command.Request.LocationIds, cancellationToken);
-        
         if (!allLocationsExist)
             return Errors.General.NotFound(name: "locations");
         
-        // 4. Формируем новый список привязок и обновляем
+        // Формируем новый список привязок и обновляем
         var newLocations = command.Request.LocationIds
             .Select(locationId => new DepartmentLocation(department.Id, locationId))
             .ToList();
@@ -74,7 +86,17 @@ public class UpdateDepartmentLocationsCommandHandler :
 
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
+        {
+            transactionScope.Rollback();
             return saveResult.Error;
+        }
+        
+        // Закрываем транзакцию и параллельно проверяем успешность сохранения
+        var commitedResult = transactionScope.Commit();
+        if (commitedResult.IsFailure)
+        {
+            return commitedResult.Error;
+        }
         
         _logger.Information(
             "Локации подразделения {DepartmentId} обновлены",

@@ -73,7 +73,7 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
         if (positionResult.IsFailure)
             return positionResult.Error;
 
-        await _positionRepository.AddAsync(positionResult.Value, cancellationToken);
+        _positionRepository.Add(positionResult.Value);
 
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)

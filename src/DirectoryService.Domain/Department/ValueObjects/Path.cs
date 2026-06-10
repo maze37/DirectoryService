@@ -9,6 +9,8 @@ public class Path : ValueObject
     
     public string Value { get; }
     
+    public static Path From(string value) => new Path(value);
+    
     private Path(string value)
     {
         Value = value;

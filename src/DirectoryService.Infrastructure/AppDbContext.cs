@@ -23,6 +23,8 @@ public class AppDbContext : DbContext
         
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.HasPostgresExtension("ltree");
+
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(AppDbContext).Assembly);
     }
