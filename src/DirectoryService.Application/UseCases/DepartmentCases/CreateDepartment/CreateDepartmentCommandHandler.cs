@@ -68,7 +68,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
                 departmentId,
                 command.Request.Name,
                 command.Request.Identifier,
-                0,
+                depth: 0,
                 _dateTime.UtcNow,
                 departmentLocations);
         }

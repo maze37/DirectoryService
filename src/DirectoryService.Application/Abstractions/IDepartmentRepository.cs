@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Department;
-using Shared.Result;
+using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
 namespace DirectoryService.Application.Abstractions;
 
@@ -16,11 +16,11 @@ public interface IDepartmentRepository
         Guid departmentId,
         CancellationToken cancellationToken = default);
 
-    // блокирует потомков
-    Task LockDescendantsAsync(string oldPath, CancellationToken cancellationToken);
+    // Блокирует потомков
+    Task LockDescendantsAsync(Path oldPath, CancellationToken cancellationToken);
 
     // True, если это дети этого отдела, если это тот и отдел.
-    Task<bool> IsDescendantOrSelfAsync(string potentialParentPath, string departmentPath, CancellationToken cancellationToken);
+    Task<bool> IsDescendantOrSelfAsync(Path potentialParentPath, Path departmentPath, CancellationToken cancellationToken);
 
     Task MoveDepartmentAsync(
         string oldPath,

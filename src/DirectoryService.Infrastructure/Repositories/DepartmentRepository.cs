@@ -1,13 +1,12 @@
 ﻿using System.Linq.Expressions;
-using System.Net.Http.Headers;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
-using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department;
 using Microsoft.EntityFrameworkCore;
 using Shared.Result;
 using Dapper;
 using DirectoryService.Domain.Department.ValueObjects;
+using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
 namespace DirectoryService.Infrastructure.Repositories;
 
@@ -108,8 +107,8 @@ public class DepartmentRepository : IDepartmentRepository
     /// Вернет false, если не потомок и не сам department.
     /// </summary>
     public async Task<bool> IsDescendantOrSelfAsync(
-        string potentialParentPath,
-            string departmentPath, 
+        Path potentialParentPath,
+        Path departmentPath, 
         CancellationToken cancellationToken = default)
     {
         const string dapperSql = """
@@ -129,7 +128,7 @@ public class DepartmentRepository : IDepartmentRepository
         return result;
     }
 
-    public async Task LockDescendantsAsync(string oldPath, CancellationToken cancellationToken = default)
+    public async Task LockDescendantsAsync(Path oldPath, CancellationToken cancellationToken = default)
     {
         const string dapperSql = """
                                     SELECT 1 FROM departments
