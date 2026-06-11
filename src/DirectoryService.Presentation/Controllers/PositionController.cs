@@ -1,4 +1,5 @@
 using DirectoryService.Application.UseCases.PositionCases.CreatePosition;
+using DirectoryService.Application.UseCases.PositionCases.DeletePosition;
 using DirectoryService.Application.UseCases.PositionCases.RenamePosition;
 using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Presentation.ResponseExtensions;
@@ -15,15 +16,18 @@ public class PositionController : ControllerBase
 {
     private readonly ICommandHandler<CreatePositionCommand, CreatePositionResponse> _createHandler;
     private readonly ICommandHandler<RenamePositionCommand, RenamePositionResponse> _renameHandler;
+    private readonly ICommandHandler<DeletePositionCommand, DeletePositionResponse> _deleteHandler;
     private readonly ILogger<PositionController> _logger;
 
     public PositionController(
         ICommandHandler<CreatePositionCommand, CreatePositionResponse> createHandler,
         ICommandHandler<RenamePositionCommand, RenamePositionResponse> renameHandler,
+        ICommandHandler<DeletePositionCommand, DeletePositionResponse> deleteHandler,
         ILogger<PositionController> logger)
     {
         _createHandler = createHandler;
         _renameHandler = renameHandler;
+        _deleteHandler = deleteHandler;
         _logger = logger;
     }
 
@@ -54,6 +58,22 @@ public class PositionController : ControllerBase
         var command = new RenamePositionCommand(id, request);
 
         var result = await _renameHandler.HandleAsync(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return result.Error.ToResponse();
+        }
+
+        return Ok(Envelope.Ok(result.Value));
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteAsync(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        var command = new DeletePositionCommand(id);
+
+        var result = await _deleteHandler.HandleAsync(command, cancellationToken);
         if (result.IsFailure)
         {
             return result.Error.ToResponse();

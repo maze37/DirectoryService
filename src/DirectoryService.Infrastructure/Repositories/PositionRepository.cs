@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Domain.Position;
+using DirectoryService.Domain.Position.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Result;
 
@@ -20,12 +21,25 @@ public class PositionRepository : IPositionRepository
         _context.Positions.Add(position);
     }
 
+    public void Remove(Position position)
+    {
+        _context.Positions.Remove(position);
+    }
+
+    public async Task<bool> HasDepartmentLinksAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var hasLinks = await _context.DepartmentPositions
+            .AnyAsync(i => i.PositionId == id, cancellationToken);
+
+        return hasLinks;
+    }
+
     public async Task<bool> ExistsActiveWithNameAsync(string name, CancellationToken cancellationToken = default)
     {
-        name = name.Trim();
+        var nameValue = PositionName.From(name);
 
         return await _context.Positions
-            .AnyAsync(p => p.Name.Value == name && p.IsActive, cancellationToken);
+            .AnyAsync(p => p.Name == nameValue && p.IsActive, cancellationToken);
     }
 
     public async Task<Result<Position, Error>> GetByIdWithLock(Guid positionId, CancellationToken cancellationToken = default)

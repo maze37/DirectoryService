@@ -14,6 +14,16 @@ public interface IPositionRepository
     void Add(Position position);
 
     /// <summary>
+    /// Помечает должность в ChangeTracker удаленным.
+    /// </summary>
+    void Remove(Position position);
+
+    /// <summary>
+    /// Проверяет, есть ли у отделов такая должность.
+    /// </summary>
+    Task<bool> HasDepartmentLinksAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Проверяет существует ли активная должность с указанным названием.
     /// </summary>
     Task<bool> ExistsActiveWithNameAsync(string name, CancellationToken cancellationToken = default);

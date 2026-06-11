@@ -1,4 +1,7 @@
-﻿using DirectoryService.Application.UseCases.DepartmentCases.CreateDepartment;
+﻿using DirectoryService.Application.UseCases.DepartmentCases.AttachPositionToDepartment;
+using DirectoryService.Application.UseCases.DepartmentCases.CreateDepartment;
+using DirectoryService.Application.UseCases.DepartmentCases.DeleteDepartment;
+using DirectoryService.Application.UseCases.DepartmentCases.DetachPositionFromDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.MoveDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.UpdateDepartmentLocations;
 using DirectoryService.Contracts.DepartmentContracts;
@@ -6,7 +9,6 @@ using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Core;
 using Shared.Result;
-using ILogger = Serilog.ILogger;
 
 namespace DirectoryService.Presentation.Controllers;
 
@@ -17,17 +19,26 @@ public class DepartmentController : ControllerBase
     private readonly ICommandHandler<CreateDepartmentCommand, CreateDepartmentResponse> _createHandler;
     private readonly ICommandHandler<UpdateDepartmentLocationsCommand, UpdateDepartmentLocationsResponse> _updateLocationsHandler;
     private readonly ICommandHandler<MoveDepartmentCommand, MoveDepartmentResponse> _moveHandler;
-    private readonly ILogger _logger;
+    private readonly ICommandHandler<DeleteDepartmentCommand, DeleteDepartmentResponse> _deleteHandler;
+    private readonly ICommandHandler<AttachPositionToDepartmentCommand, AttachPositionToDepartmentResponse> _attachPositionHandler;
+    private readonly ICommandHandler<DetachPositionFromDepartmentCommand, DetachPositionFromDepartmentResponse> _detachPositionHandler;
+    private readonly ILogger<DepartmentController> _logger;
 
     public DepartmentController(
         ICommandHandler<CreateDepartmentCommand, CreateDepartmentResponse> createHandler,
         ICommandHandler<UpdateDepartmentLocationsCommand, UpdateDepartmentLocationsResponse> updateLocationsHandler,
         ICommandHandler<MoveDepartmentCommand, MoveDepartmentResponse> moveHandler,
-        ILogger logger)
+        ICommandHandler<DeleteDepartmentCommand, DeleteDepartmentResponse> deleteHandler,
+        ICommandHandler<AttachPositionToDepartmentCommand, AttachPositionToDepartmentResponse> attachPositionHandler,
+        ICommandHandler<DetachPositionFromDepartmentCommand, DetachPositionFromDepartmentResponse> detachPositionHandler,
+        ILogger<DepartmentController> logger)
     {
         _createHandler = createHandler;
         _updateLocationsHandler = updateLocationsHandler;
         _moveHandler = moveHandler;
+        _deleteHandler = deleteHandler;
+        _attachPositionHandler = attachPositionHandler;
+        _detachPositionHandler = detachPositionHandler;
         _logger = logger;
     }
 
@@ -42,11 +53,11 @@ public class DepartmentController : ControllerBase
 
         if (result.IsFailure)
         {
-            _logger.Error("Ошибка создания отдела: {Error}", result.Error.ToResponse());
+            _logger.LogError("Ошибка создания отдела: {Error}", result.Error.ToResponse());
             return result.Error.ToResponse();
         }
 
-        _logger.Information("Отдел с ID: {DepartmentId} успешно создана", result.Value.Id);
+        _logger.LogInformation("Отдел с ID: {DepartmentId} успешно создана", result.Value.Id);
 
         return Ok(Envelope.Ok(result.Value));
     }
@@ -62,7 +73,7 @@ public class DepartmentController : ControllerBase
         var result = await _updateLocationsHandler.HandleAsync(command, cancellationToken);
         if (result.IsFailure)
         {
-            _logger.Error(
+            _logger.LogError(
                 "Ошибка обновления локаций подразделения {DepartmentId}: {Error}",
                 departmentId,
                 result.Error.ToResponse());
@@ -70,7 +81,7 @@ public class DepartmentController : ControllerBase
             return result.Error.ToResponse();
         }
 
-        _logger.Information(
+        _logger.LogInformation(
             "Локации подразделения {DepartmentId} успешно обновлены",
             result.Value.DepartmentId);
 
@@ -88,14 +99,58 @@ public class DepartmentController : ControllerBase
         var result = await _moveHandler.HandleAsync(command, cancellationToken);
         if (result.IsFailure)
         {
-            _logger.Error("Ошибка переноса подразделения {DepartmentId}. " +
+            _logger.LogError("Ошибка переноса подразделения {DepartmentId}. " +
                           "Ошибка: {Error}", command.DepartmentId, result.Error.ToResponse());
             
             return result.Error.ToResponse();
         }
 
-        _logger.Information("Подразделене успешно перенесено.");
+        _logger.LogInformation("Подразделене успешно перенесено.");
         
+        return Ok(Envelope.Ok(result.Value));
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteAsync(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        var command = new DeleteDepartmentCommand(id);
+
+        var result = await _deleteHandler.HandleAsync(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return result.Error.ToResponse();
+        }
+
+        return Ok(Envelope.Ok(result.Value));
+    }
+    
+    [HttpPost("{deptId:guid}/positions/{posId:guid}")]
+    public async Task<IActionResult> AttachPositionToDepartment(
+        [FromRoute] Guid deptId, 
+        [FromRoute] Guid posId,
+        CancellationToken cancellationToken)
+    {
+        var command = new AttachPositionToDepartmentCommand(deptId, posId);
+        var result = await _attachPositionHandler.HandleAsync(command, cancellationToken);
+        if (result.IsFailure)
+            return result.Error.ToResponse();
+    
+        return Ok(Envelope.Ok(result.Value));
+    }
+
+    [HttpDelete("{deptId:guid}/positions/{posId:guid}")]
+    public async Task<IActionResult> DetachPositionFromDepartment(
+        [FromRoute] Guid deptId, 
+        [FromRoute] Guid posId,
+        CancellationToken cancellationToken)
+    {
+        var command = new DetachPositionFromDepartmentCommand(deptId, posId);
+        var result = await _detachPositionHandler.HandleAsync(command, cancellationToken);
+        if (result.IsFailure)
+            return result.Error.ToResponse();
+
         return Ok(Envelope.Ok(result.Value));
     }
 }

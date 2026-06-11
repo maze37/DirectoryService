@@ -7,6 +7,8 @@ namespace DirectoryService.Domain.Location.ValueObjects;
 public class Timezone : ValueObject
 {
     public string Value { get; }
+
+    public static Timezone From(string value) => new Timezone(value);
     
     private Timezone(string value)
     {

@@ -1,4 +1,5 @@
-﻿using DirectoryService.Domain.Location;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Domain.Location;
 
 namespace DirectoryService.Application.Abstractions;
 
@@ -16,4 +17,19 @@ public interface ILocationRepository
     /// Проверяет что все локации с указанными ID существуют и активны.
     /// </summary>
     Task<bool> AllExistAsync(IReadOnlyList<Guid> locationIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Вернет Location с пес. блокировкой.
+    /// </summary>
+    Task<Result<Location, Error>> GetByIdWithLock(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Проверяет, есть ли привязки к отделам у локаици.
+    /// </summary>
+    Task<bool> HasDepartmentLinksAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Помечает локацию удаленной в ChangeTracker.
+    /// </summary>
+    void Remove(Location location);
 }

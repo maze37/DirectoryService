@@ -1,4 +1,6 @@
 ﻿using DirectoryService.Application.UseCases.LocationCases.CreateLocation;
+using DirectoryService.Application.UseCases.LocationCases.DeleteLocation;
+using DirectoryService.Application.UseCases.PositionCases.DeletePosition;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
@@ -13,14 +15,17 @@ namespace DirectoryService.Presentation.Controllers;
 public class LocationController : ControllerBase
 {
     private readonly ICommandHandler<CreateLocationCommand, CreateLocationResponse> _createHandler;
-    private readonly ILogger _logger;
+    private readonly ICommandHandler<DeleteLocationCommand, DeleteLocationResponse> _deleteHandler;
+    private readonly ILogger<LocationController> _logger;
 
     public LocationController(
         ICommandHandler<CreateLocationCommand, CreateLocationResponse> createHandler,
-        ILogger logger)
+        ICommandHandler<DeleteLocationCommand, DeleteLocationResponse> deleteHandler,
+        ILogger<LocationController> logger)
     {
-        _createHandler = createHandler ?? throw new ArgumentNullException(nameof(createHandler));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _createHandler = createHandler;
+        _deleteHandler = deleteHandler;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -34,11 +39,27 @@ public class LocationController : ControllerBase
 
         if (result.IsFailure)
         {
-            _logger.Error("Ошибка создания локации: {Error}", result.Error.ToResponse());
+            _logger.LogError("Ошибка создания локации: {Error}", result.Error.ToResponse());
             return result.Error.ToResponse();
         }
 
-        _logger.Information("Локация с ID: {LocationId} успешно создана", result.Value.Id);
+        _logger.LogInformation("Локация с ID: {LocationId} успешно создана", result.Value.Id);
+
+        return Ok(Envelope.Ok(result.Value));
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteAsync(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken)
+    {
+        var command = new DeleteLocationCommand(id);
+
+        var result = await _deleteHandler.HandleAsync(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return result.Error.ToResponse();
+        }
 
         return Ok(Envelope.Ok(result.Value));
     }

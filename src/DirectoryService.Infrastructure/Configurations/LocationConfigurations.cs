@@ -14,15 +14,15 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
         builder.HasKey(l => l.Id);
         builder.Property(l => l.Id).HasColumnName("id");
         
-        builder.ComplexProperty(l => l.Name, nameBuilder =>
-        {
-            nameBuilder.Property<string>(n => n.Value)
-                .HasColumnName("name")
-                .IsRequired()
-                .HasMaxLength(LocationName.MAX_NAME_LENGHT);
-        });
+        builder.Property(l => l.Name)
+            .HasConversion(
+                v => v.Value,
+                v => LocationName.From(v))
+            .HasColumnName("name")
+            .IsRequired()
+            .HasMaxLength(LocationName.MAX_NAME_LENGHT);
         
-        builder.ComplexProperty(l => l.Address, addrBuilder =>
+        builder.OwnsOne(l => l.Address, addrBuilder =>
         {
             addrBuilder.Property(a => a.Country)
                 .HasColumnName("address_country")
@@ -50,13 +50,13 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
                 .HasMaxLength(LenghtConstants.MAXLENGHT);
         });
         
-        builder.ComplexProperty(l => l.Timezone, tzBuilder =>
-        {
-            tzBuilder.Property<string>(s => s.Value)
-                .HasColumnName("timezone")
-                .IsRequired()
-                .HasMaxLength(LenghtConstants.MAXLENGHT);
-        });
+        builder.Property(l => l.Timezone)
+            .HasConversion(
+                v => v.Value,
+                v => Timezone.From(v))
+            .HasColumnName("timezone")
+            .IsRequired()
+            .HasMaxLength(LenghtConstants.MAXLENGHT);
         
         builder.Property(l => l.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(l => l.CreatedWhen).HasColumnName("created_when").IsRequired();
@@ -66,7 +66,9 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
             .WithOne()
             .HasForeignKey(dl => dl.LocationId);
         
-        builder.Property(d => d.Version)
+        builder.Property(p => p.Version)
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
             .IsRowVersion();
     }
 }

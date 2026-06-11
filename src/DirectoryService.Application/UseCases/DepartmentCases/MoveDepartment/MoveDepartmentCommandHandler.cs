@@ -45,7 +45,7 @@ public class MoveDepartmentCommandHandler : ICommandHandler<MoveDepartmentComman
         using var transactionScope = transactionScopeResult.Value;
 
         // 1. Получаем department с блокировкой
-        var departmentResult = await _departmentRepository.GetByIdWithLockAsync(
+        var departmentResult = await _departmentRepository.GetByIdWithLock(
             command.DepartmentId, cancellationToken);
         if (departmentResult.IsFailure)
             return departmentResult.Error;
@@ -63,7 +63,7 @@ public class MoveDepartmentCommandHandler : ICommandHandler<MoveDepartmentComman
             if (command.DepartmentId == command.Request.ParentId)
                 return Error.Failure("department.self.parent", "Нельзя выбрать себя родителем.");
 
-            var parentResult = await _departmentRepository.GetByIdWithLockAsync(
+            var parentResult = await _departmentRepository.GetByIdWithLock(
                 command.Request.ParentId.Value, cancellationToken);
             if (parentResult.IsFailure)
                 return parentResult.Error;

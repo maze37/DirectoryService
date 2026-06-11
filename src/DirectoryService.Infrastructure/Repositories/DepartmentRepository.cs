@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Result;
 using Dapper;
 using DirectoryService.Domain.Department.ValueObjects;
+using DirectoryService.Domain.DepartmentPositions;
 using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
 namespace DirectoryService.Infrastructure.Repositories;
@@ -44,7 +45,7 @@ public class DepartmentRepository : IDepartmentRepository
         }
     }
 
-    public async Task<Result<Department, Error>> GetByIdWithLockAsync(
+    public async Task<Result<Department, Error>> GetByIdWithLock(
         Guid departmentId, 
         CancellationToken cancellationToken = default)
     {
@@ -69,6 +70,20 @@ public class DepartmentRepository : IDepartmentRepository
         {
             return Error.Failure("department.get.failed", ex.Message);
         }
+    }
+
+    public async Task DeleteWithDescendants(Path path, CancellationToken cancellationToken)
+    {
+        const string dapperSql = """
+                                    DELETE FROM departments
+                                    WHERE path <@ @path::ltree
+                                 """;
+
+        var dbConn = _context.Database.GetDbConnection();
+        await dbConn.ExecuteAsync(new CommandDefinition(
+            dapperSql, 
+            new { path = path.Value }, 
+            cancellationToken: cancellationToken));
     }
 
     public async Task<bool> AllExistAndActiveAsync(Guid[] ids, CancellationToken cancellationToken = default)
@@ -167,5 +182,48 @@ public class DepartmentRepository : IDepartmentRepository
             dapperSql,
             new { newParentPath, oldPath, departmentId, newParentId },
             cancellationToken: cancellationToken));
+    }
+
+    public async Task<bool> IsPositionLinkedAsync(
+        Guid departmentId,
+        Guid positionId,
+        CancellationToken cancellationToken = default)
+    {
+        var isLinked = await _context.DepartmentPositions
+            .AnyAsync(x => x.DepartmentId == departmentId && x.PositionId == positionId);
+
+        return isLinked;
+    }
+
+    public async Task<Result<DepartmentPosition, Error>> GetPositionLinkAsync(
+        Guid departmentId,
+        Guid positionId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var departmentPosition = await _context.DepartmentPositions
+                .FirstOrDefaultAsync(x => x.DepartmentId == departmentId && x.PositionId == positionId, cancellationToken);
+            
+            if (departmentPosition is null)
+                return Errors.General.NotFound(name: "department.position");
+
+            return departmentPosition;
+        }
+        catch (Exception ex)
+        {
+            return Error.Failure("department.position.get.failed", ex.Message);
+        }
+    }
+    
+
+    public void AddPositionLink(DepartmentPosition link)
+    {
+        _context.DepartmentPositions.Add(link);
+    }
+
+    public void RemovePositionLink(DepartmentPosition link)
+    {
+        _context.DepartmentPositions.Remove(link);
     }
 }
