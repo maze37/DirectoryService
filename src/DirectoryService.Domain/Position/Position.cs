@@ -86,11 +86,11 @@ public sealed class Position : AggregateRoot
             departmentPositions);
     }
     
+    /// <summary>
+    /// Принимает готовый VO + меняет имя должности.
+    /// </summary>
     public void Rename(PositionName newName, DateTimeOffset dateTime)
     {
-        if (string.IsNullOrWhiteSpace(newName))
-            throw new ArgumentException("Name cannot be empty");
-
         Name = newName;
         UpdatedWhen = dateTime;
     }
