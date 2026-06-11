@@ -22,7 +22,7 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
             .IsRequired()
             .HasMaxLength(LocationName.MAX_NAME_LENGHT);
         
-        builder.OwnsOne(l => l.Address, addrBuilder =>
+        builder.ComplexProperty(l => l.Address, addrBuilder =>
         {
             addrBuilder.Property(a => a.Country)
                 .HasColumnName("address_country")

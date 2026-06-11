@@ -54,7 +54,7 @@ public class DepartmentRepository : IDepartmentRepository
             var department = await _context.Departments
                     .FromSqlRaw("""
                                 SELECT id, parent_id, depth, children_count, is_active, 
-                                       created_when, updated_when, name, Slug, path, xmin
+                                       created_when, updated_when, name, slug, path, xmin
                                 FROM departments 
                                 WHERE id = {0} 
                                 FOR UPDATE

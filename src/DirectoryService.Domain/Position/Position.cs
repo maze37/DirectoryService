@@ -86,13 +86,12 @@ public sealed class Position : AggregateRoot
             departmentPositions);
     }
     
-    public void Rename(string newName, DateTimeOffset dateTime)
+    public void Rename(PositionName newName, DateTimeOffset dateTime)
     {
         if (string.IsNullOrWhiteSpace(newName))
             throw new ArgumentException("Name cannot be empty");
-        
-        var name = PositionName.Create(newName);
-        Name = name.Value;
+
+        Name = newName;
         UpdatedWhen = dateTime;
     }
 }

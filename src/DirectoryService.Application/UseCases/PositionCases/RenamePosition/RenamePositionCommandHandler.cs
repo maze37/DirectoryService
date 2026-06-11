@@ -2,6 +2,7 @@
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.PositionContracts;
+using DirectoryService.Domain.Position.ValueObjects;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Shared.Core;
@@ -58,7 +59,14 @@ public class RenamePositionCommandHandler : ICommandHandler<RenamePositionComman
         
         var position = positionResult.Value;
         var dateTime = _dateTime.UtcNow;
-        position.Rename(command.Request.Name, dateTime);
+        
+        var newName = PositionName.Create(command.Request.Name);
+        if (newName.IsFailure)
+        {
+            return newName.Error;
+        }
+        
+        position.Rename(newName.Value, dateTime);
         _positionRepository.Update(position);
         
         // 6. Сохраняем
