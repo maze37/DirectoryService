@@ -6,6 +6,6 @@ public class GetLocationByIdValidator : AbstractValidator<GetLocationByIdQuery>
 {
     public GetLocationByIdValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.Id).NotNull();
     }
 }

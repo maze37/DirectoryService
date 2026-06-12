@@ -6,6 +6,6 @@ public class GetDepartmentByIdValidator : AbstractValidator<GetDepartmentByIdQue
 {
     public GetDepartmentByIdValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.Id).NotNull();
     }
 }

@@ -26,14 +26,7 @@ public static class Inject
             options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
         });
 
-        services.AddScoped<IReadDbContext, AppDbContext>(_ =>
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            var connectionString = configuration.GetConnectionString("DirectoryServiceDb");
-            optionsBuilder.UseNpgsql(connectionString);
-    
-            return new AppDbContext(optionsBuilder.Options);
-        });
+        services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<AppDbContext>());
         
         services.AddScoped<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<ITransactionManager, TransactionManager>();

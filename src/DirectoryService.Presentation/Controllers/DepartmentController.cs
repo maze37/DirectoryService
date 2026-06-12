@@ -1,5 +1,4 @@
-﻿using CSharpFunctionalExtensions;
-using DirectoryService.Application.UseCases.DepartmentCases.Commands.AttachPositionToDepartment;
+﻿using DirectoryService.Application.UseCases.DepartmentCases.Commands.AttachPositionToDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.CreateDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.DeleteDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.DetachPositionFromDepartment;
@@ -9,7 +8,6 @@ using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmen
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Update;
 using Shared.Core;
 using Shared.Result;
 
