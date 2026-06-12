@@ -1,12 +1,15 @@
-﻿using DirectoryService.Application.UseCases.DepartmentCases.AttachPositionToDepartment;
-using DirectoryService.Application.UseCases.DepartmentCases.CreateDepartment;
-using DirectoryService.Application.UseCases.DepartmentCases.DeleteDepartment;
-using DirectoryService.Application.UseCases.DepartmentCases.DetachPositionFromDepartment;
-using DirectoryService.Application.UseCases.DepartmentCases.MoveDepartment;
-using DirectoryService.Application.UseCases.DepartmentCases.UpdateDepartmentLocations;
+﻿using CSharpFunctionalExtensions;
+using DirectoryService.Application.UseCases.DepartmentCases.Commands.AttachPositionToDepartment;
+using DirectoryService.Application.UseCases.DepartmentCases.Commands.CreateDepartment;
+using DirectoryService.Application.UseCases.DepartmentCases.Commands.DeleteDepartment;
+using DirectoryService.Application.UseCases.DepartmentCases.Commands.DetachPositionFromDepartment;
+using DirectoryService.Application.UseCases.DepartmentCases.Commands.MoveDepartment;
+using DirectoryService.Application.UseCases.DepartmentCases.Commands.UpdateDepartmentLocations;
+using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentById;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Update;
 using Shared.Core;
 using Shared.Result;
 
@@ -22,6 +25,7 @@ public class DepartmentController : ControllerBase
     private readonly ICommandHandler<DeleteDepartmentCommand, DeleteDepartmentResponse> _deleteHandler;
     private readonly ICommandHandler<AttachPositionToDepartmentCommand, AttachPositionToDepartmentResponse> _attachPositionHandler;
     private readonly ICommandHandler<DetachPositionFromDepartmentCommand, DetachPositionFromDepartmentResponse> _detachPositionHandler;
+    private readonly IQueryHandler<GetDepartmentByIdQuery, GetDepartmentDto> _getByIdHandler;
     private readonly ILogger<DepartmentController> _logger;
 
     public DepartmentController(
@@ -31,6 +35,7 @@ public class DepartmentController : ControllerBase
         ICommandHandler<DeleteDepartmentCommand, DeleteDepartmentResponse> deleteHandler,
         ICommandHandler<AttachPositionToDepartmentCommand, AttachPositionToDepartmentResponse> attachPositionHandler,
         ICommandHandler<DetachPositionFromDepartmentCommand, DetachPositionFromDepartmentResponse> detachPositionHandler,
+        IQueryHandler<GetDepartmentByIdQuery, GetDepartmentDto> getByIdHandler,
         ILogger<DepartmentController> logger)
     {
         _createHandler = createHandler;
@@ -39,6 +44,7 @@ public class DepartmentController : ControllerBase
         _deleteHandler = deleteHandler;
         _attachPositionHandler = attachPositionHandler;
         _detachPositionHandler = detachPositionHandler;
+        _getByIdHandler = getByIdHandler;
         _logger = logger;
     }
 
@@ -152,5 +158,24 @@ public class DepartmentController : ControllerBase
             return result.Error.ToResponse();
 
         return Ok(Envelope.Ok(result.Value));
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetByIdAsync(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetDepartmentByIdQuery(id);
+        var result = await _getByIdHandler.HandleAsync(query, cancellationToken);
+    
+        if (result is null)  // проверяем null вместо IsFailure
+        {
+            _logger.LogWarning("Отдел {DepartmentId} не найден.", id);
+            return NotFound(Envelope.Error(
+                Errors.General.NotFound(id)));
+        }
+    
+        _logger.LogInformation("Отдел {DepartmentId} получено успешно.", id);
+        return Ok(Envelope.Ok(result));
     }
 }

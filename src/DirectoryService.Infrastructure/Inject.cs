@@ -1,4 +1,5 @@
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Infrastructure.Database;
 using DirectoryService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,15 @@ public static class Inject
             options.UseNpgsql(connectionString);
             options.UseLoggerFactory(loggerFactory);
             options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+        });
+
+        services.AddScoped<IReadDbContext, AppDbContext>(_ =>
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            var connectionString = configuration.GetConnectionString("DirectoryServiceDb");
+            optionsBuilder.UseNpgsql(connectionString);
+    
+            return new AppDbContext(optionsBuilder.Options);
         });
         
         services.AddScoped<IDateTimeProvider, DateTimeProvider>();

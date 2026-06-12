@@ -1,6 +1,6 @@
-﻿using DirectoryService.Application.UseCases.LocationCases.CreateLocation;
-using DirectoryService.Application.UseCases.LocationCases.DeleteLocation;
-using DirectoryService.Application.UseCases.PositionCases.DeletePosition;
+﻿using DirectoryService.Application.UseCases.LocationCases.Commands.CreateLocation;
+using DirectoryService.Application.UseCases.LocationCases.Commands.DeleteLocation;
+using DirectoryService.Application.UseCases.LocationCases.Queries.GetLocationById;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
@@ -16,15 +16,18 @@ public class LocationController : ControllerBase
 {
     private readonly ICommandHandler<CreateLocationCommand, CreateLocationResponse> _createHandler;
     private readonly ICommandHandler<DeleteLocationCommand, DeleteLocationResponse> _deleteHandler;
+    private readonly IQueryHandler<GetLocationByIdQuery, GetLocationDto> _getByIdHandler;
     private readonly ILogger<LocationController> _logger;
 
     public LocationController(
         ICommandHandler<CreateLocationCommand, CreateLocationResponse> createHandler,
         ICommandHandler<DeleteLocationCommand, DeleteLocationResponse> deleteHandler,
+        IQueryHandler<GetLocationByIdQuery, GetLocationDto> getByIdHandler,
         ILogger<LocationController> logger)
     {
         _createHandler = createHandler;
         _deleteHandler = deleteHandler;
+        _getByIdHandler = getByIdHandler;
         _logger = logger;
     }
 
@@ -62,5 +65,25 @@ public class LocationController : ControllerBase
         }
 
         return Ok(Envelope.Ok(result.Value));
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetByIdAsync(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetLocationByIdQuery(id);
+
+        var result = await _getByIdHandler.HandleAsync(query, cancellationToken);
+        if (result is null)
+        {
+            _logger.LogWarning("Локация {LocationId} не найдена.", id);
+            return NotFound(Envelope.Error(
+                Errors.General.NotFound(id)));
+        }
+        
+        _logger.LogInformation("Локация {LocationId} успешно получена.", id);
+
+        return Ok(Envelope.Ok(result));
     }
 }

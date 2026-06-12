@@ -1,6 +1,6 @@
-using DirectoryService.Application.UseCases.PositionCases.CreatePosition;
-using DirectoryService.Application.UseCases.PositionCases.DeletePosition;
-using DirectoryService.Application.UseCases.PositionCases.RenamePosition;
+using DirectoryService.Application.UseCases.PositionCases.Commands.CreatePosition;
+using DirectoryService.Application.UseCases.PositionCases.Commands.DeletePosition;
+using DirectoryService.Application.UseCases.PositionCases.Commands.RenamePosition;
 using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
