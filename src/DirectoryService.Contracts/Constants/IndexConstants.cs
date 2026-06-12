@@ -10,7 +10,7 @@ public static class IndexConstants
 
     public static class Departments
     {
-        public const string Identifier = "ix_departments_identifier";
+        public const string slug = "ix_departments_slug";
     }
 
     public static class Positions

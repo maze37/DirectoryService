@@ -13,7 +13,6 @@ namespace DirectoryService.Domain.Department;
 /// </summary>
 public sealed class Department : AggregateRoot
 {
-    
     private readonly List<DepartmentLocation> _departmentLocations = [];
     private readonly List<DepartmentPosition> _departmentPositions = [];
     private readonly List<Department> _childrenDepartments  = [];
@@ -30,7 +29,7 @@ public sealed class Department : AggregateRoot
     /// <summary>
     /// Идентификатор отдела.
     /// </summary>
-    public Identifier Identifier { get; private set; } = null!;
+    public Slug Slug { get; private set; } = null!;
     
     /// <summary>
     /// FK → Department.Id; null — корень.
@@ -77,7 +76,7 @@ public sealed class Department : AggregateRoot
     public Department(
         Guid id,
         DepartmentName departmentName,
-        Identifier identifier,
+        Slug slug,
         Guid? parentId,
         Path path,
         int depth,
@@ -88,7 +87,7 @@ public sealed class Department : AggregateRoot
         IEnumerable<DepartmentPosition> departmentPositions) : base(id)
     {
         DepartmentName = departmentName;
-        Identifier = identifier;
+        Slug = slug;
         ParentId = parentId;
         Path = path;
         Depth = depth;
@@ -117,7 +116,7 @@ public sealed class Department : AggregateRoot
         if (nameResult.IsFailure)
             return nameResult.Error;
 
-        var identifierResult = Identifier.Create(identifier);
+        var identifierResult = Slug.Create(identifier);
         if (identifierResult.IsFailure)
             return identifierResult.Error;
         
@@ -152,7 +151,7 @@ public sealed class Department : AggregateRoot
         if (nameResult.IsFailure)
             return nameResult.Error;
 
-        var identifierResult = Identifier.Create(identifier);
+        var identifierResult = Slug.Create(identifier);
         if (identifierResult.IsFailure)
             return identifierResult.Error;
         

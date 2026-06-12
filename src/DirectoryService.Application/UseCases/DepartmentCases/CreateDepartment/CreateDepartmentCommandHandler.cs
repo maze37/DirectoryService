@@ -51,7 +51,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
             return Errors.General.NotFound(name: "locations");
 
         var identifierExists = await _departmentRepository
-            .ExistsByIdentifierAsync(command.Request.Identifier, cancellationToken);
+            .ExistsByIdentifierAsync(command.Request.Slug, cancellationToken);
         if (identifierExists)
             return Error.Conflict("department.identifier.taken", "Отдел с таким идентификатором уже существует");
 
@@ -67,7 +67,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
             departmentResult = Department.CreateRoot(
                 departmentId,
                 command.Request.Name,
-                command.Request.Identifier,
+                command.Request.Slug,
                 depth: 0,
                 _dateTime.UtcNow,
                 departmentLocations);
@@ -89,7 +89,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
             departmentResult = Department.CreateChild(
                 departmentId,
                 command.Request.Name,
-                command.Request.Identifier,
+                command.Request.Slug,
                 parent,
                 _dateTime.UtcNow,
                 departmentLocations);
@@ -105,7 +105,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         {
             var constraint = saveResult.Error.InvalidField ?? "";
 
-            if (constraint.Contains(IndexConstants.Departments.Identifier))
+            if (constraint.Contains(IndexConstants.Departments.slug))
                 return Error.Conflict("department.identifier.taken", "Отдел с таким идентификатором уже существует");
 
             return saveResult.Error;

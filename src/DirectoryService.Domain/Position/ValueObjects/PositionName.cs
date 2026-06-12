@@ -10,6 +10,8 @@ public class PositionName : ValueObject
     public const int MAX_NAME_LENGHT = 100;
     
     public string Value { get; }
+
+    public static PositionName From(string value) => new PositionName(value);
     
     private PositionName(string value)
     {

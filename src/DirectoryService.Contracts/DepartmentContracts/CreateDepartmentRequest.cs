@@ -2,6 +2,6 @@
 
 public record CreateDepartmentRequest(
     string Name, 
-    string Identifier, 
+    string Slug, 
     Guid? ParentId, 
     Guid[] LocationIds);

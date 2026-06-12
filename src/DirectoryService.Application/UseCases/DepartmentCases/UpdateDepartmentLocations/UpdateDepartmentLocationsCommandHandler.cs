@@ -57,7 +57,7 @@ public class UpdateDepartmentLocationsCommandHandler :
         
         // Проверяем - существует ли подразделение
         // Песеммистичная блокировка - А должен коммитнуть, только потом возьмется за свежие данные B
-        var departmentResult = await _departmentRepository.GetByIdWithLockAsync(
+        var departmentResult = await _departmentRepository.GetByIdWithLock(
             command.DepartmentId, cancellationToken);
         if (departmentResult.IsFailure)
         {

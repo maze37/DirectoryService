@@ -15,11 +15,11 @@ public class CreateDepartmentCommandValidator : AbstractValidator<CreateDepartme
                 .WithMessage("Название отдела обязательно")
             .MustBeValueObject(DepartmentName.Create);
 
-        RuleFor(x => x.Request.Identifier)
+        RuleFor(x => x.Request.Slug)
             .NotEmpty()
                 .WithErrorCode("department.departmentIdentifier.required")
                 .WithMessage("Идентификатор отдела обязательна")
-            .MustBeValueObject(Identifier.Create);
+            .MustBeValueObject(Slug.Create);
 
         RuleFor(x => x.Request.LocationIds)
             .NotNull()

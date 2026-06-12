@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Department;
+using DirectoryService.Domain.DepartmentPositions;
 using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
 namespace DirectoryService.Application.Abstractions;
@@ -25,9 +26,14 @@ public interface IDepartmentRepository
     /// <summary>
     /// Возвращает подразделение по ID с пессимистичной блокировкой (FOR UPDATE).
     /// </summary>
-    Task<Result<Department, Error>> GetByIdWithLockAsync(
+    Task<Result<Department, Error>> GetByIdWithLock(
         Guid departmentId,
         CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Удаляет отдел по айди и с дочерними вместе.
+    /// </summary>
+    Task DeleteWithDescendants(Path path, CancellationToken cancellationToken);
 
     /// <summary>
     /// Блокирует подразделение и всех его потомков (FOR UPDATE) по пути.
@@ -67,4 +73,18 @@ public interface IDepartmentRepository
     /// Обновляет список локаций подразделения в ChangeTracker.
     /// </summary>
     Task UpdateLocationsAsync(Department department, CancellationToken cancellationToken = default);
+    
+    Task<bool> IsPositionLinkedAsync(
+        Guid departmentId, 
+        Guid positionId, 
+        CancellationToken cancellationToken = default);
+    
+    Task<Result<DepartmentPosition, Error>> GetPositionLinkAsync(
+        Guid departmentId, 
+        Guid positionId, 
+        CancellationToken cancellationToken = default);
+    
+    void AddPositionLink(DepartmentPosition link);
+    
+    void RemovePositionLink(DepartmentPosition link);
 }

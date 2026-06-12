@@ -85,4 +85,13 @@ public sealed class Position : AggregateRoot
             createdWhen,
             departmentPositions);
     }
+    
+    /// <summary>
+    /// Принимает готовый VO + меняет имя должности.
+    /// </summary>
+    public void Rename(PositionName newName, DateTimeOffset dateTime)
+    {
+        Name = newName;
+        UpdatedWhen = dateTime;
+    }
 }

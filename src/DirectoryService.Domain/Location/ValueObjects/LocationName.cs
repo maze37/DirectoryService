@@ -11,6 +11,8 @@ public class LocationName : ValueObject
     
     public string Value { get; }
     
+    public static LocationName From(string value) => new LocationName(value);
+    
     private LocationName(string value)
     {
         Value = value;

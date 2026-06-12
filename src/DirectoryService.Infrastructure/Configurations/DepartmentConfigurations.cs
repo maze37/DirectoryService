@@ -23,13 +23,12 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
             .IsRequired()
             .HasMaxLength(DepartmentName.MAX_NAME_LENGHT);
 
-        builder.Property(d => d.Identifier)
-            .HasColumnName("identifier")
+        builder.Property(d => d.Slug)
+            .HasColumnName("slug")
             .HasConversion(
-                identifier => identifier.Value,
-                value => Identifier.From(value))
-            .IsRequired()
-            .HasMaxLength(Identifier.IDENTIFIER_MAX_LENGTH);
+                slug => slug.Value,
+                value => Slug.From(value))
+            .IsRequired();
         
         builder.Property(d => d.Path)
             .HasColumnName("path")

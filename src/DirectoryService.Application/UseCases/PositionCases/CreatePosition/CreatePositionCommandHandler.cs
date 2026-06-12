@@ -6,9 +6,10 @@ using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Position;
 using FluentValidation;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using Shared.Core;
 using Shared.Result;
+using ILogger = Serilog.ILogger;
 
 namespace DirectoryService.Application.UseCases.PositionCases.CreatePosition;
 
@@ -19,7 +20,7 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
     private readonly ITransactionManager _transactionManager;
     private readonly IDateTimeProvider _dateTime;
     private readonly IValidator<CreatePositionCommand> _validator;
-    private readonly ILogger _logger;
+    private readonly ILogger<CreatePositionCommandHandler> _logger;
 
     public CreatePositionCommandHandler(
         IPositionRepository positionRepository,
@@ -27,7 +28,7 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
         ITransactionManager transactionManager,
         IDateTimeProvider dateTime,
         IValidator<CreatePositionCommand> validator,
-        ILogger logger)
+        ILogger<CreatePositionCommandHandler> logger)
     {
         _positionRepository = positionRepository;
         _departmentRepository = departmentRepository;
@@ -49,7 +50,7 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
             .ExistsActiveWithNameAsync(command.Request.Name, cancellationToken);
         if (isExists)
         {
-            _logger.Warning("Должность с названием {PositionName} уже существует", command.Request.Name);
+            _logger.LogWarning("Должность с названием {PositionName} уже существует", command.Request.Name);
             return Error.Conflict("position.name.taken", "Должность с таким названием уже существует");
         }
 
@@ -86,7 +87,7 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
             return saveResult.Error;
         }
 
-        _logger.Information("Должность {Name} создана", command.Request.Name);
+        _logger.LogInformation("Должность {Name} создана", command.Request.Name);
         return new CreatePositionResponse(positionResult.Value.Id);
     }
 }
