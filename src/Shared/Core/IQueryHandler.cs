@@ -10,11 +10,5 @@ namespace Shared.Core;
 public interface IQueryHandler<in TQuery, TResponse> 
     where TQuery : IQuery<TResponse>
 {
-    /// <summary>
-    /// Выполняет запрос
-    /// </summary>
-    /// <param name="query">Запрос</param>
-    /// <param name="cancellationToken">Токен отмены</param>
-    /// <returns>Результат с данными</returns>
-    Task<CSharpFunctionalExtensions.Result<TResponse>> HandleAsync(TQuery query, CancellationToken cancellationToken = default);
+    Task<TResponse?> HandleAsync(TQuery query, CancellationToken cancellationToken = default);
 }

@@ -1,4 +1,5 @@
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Infrastructure.Database;
 using DirectoryService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,8 @@ public static class Inject
             options.UseLoggerFactory(loggerFactory);
             options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
         });
+
+        services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<AppDbContext>());
         
         services.AddScoped<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<ITransactionManager, TransactionManager>();
