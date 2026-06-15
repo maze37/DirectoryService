@@ -1,6 +1,8 @@
-﻿using DirectoryService.Application.UseCases.LocationCases.Commands.CreateLocation;
+﻿using System.Runtime.CompilerServices;
+using DirectoryService.Application.UseCases.LocationCases.Commands.CreateLocation;
 using DirectoryService.Application.UseCases.LocationCases.Commands.DeleteLocation;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetLocationById;
+using DirectoryService.Application.UseCases.LocationCases.Queries.GetTopLocations;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
@@ -17,17 +19,20 @@ public class LocationController : ControllerBase
     private readonly ICommandHandler<CreateLocationCommand, CreateLocationResponse> _createHandler;
     private readonly ICommandHandler<DeleteLocationCommand, DeleteLocationResponse> _deleteHandler;
     private readonly IQueryHandler<GetLocationByIdQuery, GetLocationDto> _getByIdHandler;
+    private readonly IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>> _getTopHandler;
     private readonly ILogger<LocationController> _logger;
 
     public LocationController(
         ICommandHandler<CreateLocationCommand, CreateLocationResponse> createHandler,
         ICommandHandler<DeleteLocationCommand, DeleteLocationResponse> deleteHandler,
         IQueryHandler<GetLocationByIdQuery, GetLocationDto> getByIdHandler,
+        IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>> getTopHandler,
         ILogger<LocationController> logger)
     {
         _createHandler = createHandler;
         _deleteHandler = deleteHandler;
         _getByIdHandler = getByIdHandler;
+        _getTopHandler = getTopHandler;
         _logger = logger;
     }
 
@@ -83,6 +88,23 @@ public class LocationController : ControllerBase
         }
         
         _logger.LogInformation("Локация {LocationId} успешно получена.", id);
+
+        return Ok(Envelope.Ok(result));
+    }
+
+    [HttpGet("top")]
+    public async Task<IActionResult> TopLocations(CancellationToken cancellationToken = default)
+    {
+        var query = new GetTopLocationsQuery();
+        
+        var result = await _getTopHandler.HandleAsync(query, cancellationToken);
+        if (result is null)
+        {
+            // Если нет локаций вовсе, вернется null.
+            _logger.LogWarning("Локаций в топе нет.");
+        }
+        
+        _logger.LogInformation("Топ локаций получен. Количество: {Count}", result?.Count ?? 0);
 
         return Ok(Envelope.Ok(result));
     }

@@ -1,4 +1,5 @@
 ﻿using DirectoryService.Domain.Department;
+using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.Location;
 using DirectoryService.Domain.Position;
 
@@ -9,4 +10,5 @@ public interface IReadDbContext
     IQueryable<Department> DepartmentsRead { get; }
     IQueryable<Location> LocationsRead { get; }
     IQueryable<Position> PositionsRead { get; } 
+    IQueryable<DepartmentLocation> DepartmentLocationsRead { get; }
 }

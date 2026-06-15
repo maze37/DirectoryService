@@ -61,7 +61,7 @@ public class LocationRepository : ILocationRepository
     public async Task<bool> HasDepartmentLinksAsync(Guid id, CancellationToken cancellationToken)
     {
         var hasLinks = await _context.DepartmentLocations
-            .AnyAsync(x => x.LocationId == id);
+            .AnyAsync(x => x.LocationId == id, cancellationToken);
 
         return hasLinks;
     }

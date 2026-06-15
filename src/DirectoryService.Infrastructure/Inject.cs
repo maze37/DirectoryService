@@ -27,6 +27,12 @@ public static class Inject
         });
 
         services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+
+        services.AddSingleton<IDbConnectionFactory>(sp =>
+        {
+            var connectionString = configuration.GetConnectionString("DirectoryServiceDb")!;
+            return new NpgsqlConnectionFactory(connectionString);
+        });
         
         services.AddScoped<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<ITransactionManager, TransactionManager>();
