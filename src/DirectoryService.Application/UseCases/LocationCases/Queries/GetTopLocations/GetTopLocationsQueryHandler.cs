@@ -18,7 +18,7 @@ public class GetTopLocationsQueryHandler : IQueryHandler<GetTopLocationsQuery, L
         GetTopLocationsQuery query,
         CancellationToken cancellationToken = default)
     {
-        var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
         const string sql = """
                            SELECT 
@@ -37,15 +37,18 @@ public class GetTopLocationsQueryHandler : IQueryHandler<GetTopLocationsQuery, L
                                     l.address_country, l.address_city,
                                     l.address_street, l.address_building, 
                                     l.address_office, l.address_postal_code
-                           ORDER BY DepartmentCount DESC
+                           ORDER BY DepartmentCount DESC, l.id
                            LIMIT 5;
                            """;
 
-        var result = await connection.QueryAsync<TopLocationDto, AddressDto, TopLocationDto>(
+        var command = new CommandDefinition(
             sql,
-            (location, address) => { return location with { Address = address }; },
-            splitOn: "City"
-        );
+            cancellationToken: cancellationToken);
+
+        var result = await connection.QueryAsync<TopLocationDto, AddressDto, TopLocationDto>(
+            command,
+            map: (location, address) => location with { Address = address },
+            splitOn: "City");
 
         return result.ToList();
     }
