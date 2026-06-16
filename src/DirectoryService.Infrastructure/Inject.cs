@@ -26,13 +26,14 @@ public static class Inject
             options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
         });
 
+        // Для EFCore
         services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<AppDbContext>());
-
-        services.AddSingleton<IDbConnectionFactory>(sp =>
-        {
-            var connectionString = configuration.GetConnectionString("DirectoryServiceDb")!;
-            return new NpgsqlConnectionFactory(connectionString);
-        });
+        
+        // Для Dapper
+        services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
+        
+        // Чтобы Dapper маппил все в snake_case
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         
         services.AddScoped<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<ITransactionManager, TransactionManager>();

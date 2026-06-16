@@ -1,9 +1,12 @@
-﻿using Dapper;
+﻿using CSharpFunctionalExtensions;
+using Dapper;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.LocationContracts;
+using Microsoft.EntityFrameworkCore;
 using Shared.Core;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Queries.GetTopLocations;
+
 
 public class GetTopLocationsQueryHandler : IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>>
 {
@@ -41,15 +44,55 @@ public class GetTopLocationsQueryHandler : IQueryHandler<GetTopLocationsQuery, L
                            LIMIT 5;
                            """;
 
-        var command = new CommandDefinition(
+        var commandDefinition = new CommandDefinition(
             sql,
             cancellationToken: cancellationToken);
 
         var result = await connection.QueryAsync<TopLocationDto, AddressDto, TopLocationDto>(
-            command,
+            commandDefinition,
             map: (location, address) => location with { Address = address },
             splitOn: "City");
 
         return result.ToList();
     }
 }
+
+/*
+public class GetTopLocationsQueryHandler : IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>>
+{
+    private readonly IReadDbContext _readDbContext;
+
+    public GetTopLocationsQueryHandler(IReadDbContext readDbContext)
+    {
+        _readDbContext = readDbContext;
+    }
+
+    public async Task<List<TopLocationDto>?> HandleAsync(
+        GetTopLocationsQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _readDbContext.LocationsRead
+            .Select(e => new TopLocationDto
+            {
+                Id = e.Id,
+                Name = e.Name,
+                Address = new AddressDto
+                {
+                    Building = e.Address.Building,
+                    City = e.Address.City,
+                    Country = e.Address.Country,
+                    Street = e.Address.Street,
+                    Office = e.Address.Office,
+                    PostalCode = e.Address.PostalCode
+                },
+                DepartmentCount = _readDbContext.DepartmentLocationsRead.Count(dl => dl.LocationId == e.Id)
+            })
+            .OrderByDescending(dto => dto.DepartmentCount)
+            .ThenBy(dto => dto.Id)
+            .Take(5)
+            .ToListAsync(cancellationToken);
+
+        return result;
+    }
+}
+*/
