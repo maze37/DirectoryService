@@ -30,7 +30,11 @@ public static class Inject
         services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<AppDbContext>());
         
         // Для Dapper
-        services.AddSingleton<IDbConnectionFactory, NpgsqlConnectionFactory>();
+        services.AddSingleton<IDbConnectionFactory>(sp =>
+        {
+            var connectionString = configuration.GetConnectionString("DirectoryServiceDb")!;
+            return new NpgsqlConnectionFactory(connectionString);
+        });
         
         // Чтобы Dapper маппил все в snake_case
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
