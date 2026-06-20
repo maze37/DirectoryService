@@ -1,4 +1,4 @@
-﻿namespace DirectoryService.Domain;
+﻿namespace DirectoryService.Contracts.Constants;
 
 public class LenghtConstants
 {

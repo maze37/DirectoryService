@@ -1,4 +1,5 @@
-﻿using DirectoryService.Domain;
+﻿using DirectoryService.Contracts.Constants;
+using DirectoryService.Domain;
 using DirectoryService.Domain.Position;
 using DirectoryService.Domain.Position.ValueObjects;
 using Microsoft.EntityFrameworkCore;
