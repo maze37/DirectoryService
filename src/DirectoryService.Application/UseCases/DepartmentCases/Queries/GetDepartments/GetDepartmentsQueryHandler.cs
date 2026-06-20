@@ -33,18 +33,27 @@ public class GetDepartmentsQueryHandler : IQueryHandler<GetDepartmentsQuery, Pag
 
         var sortBy = query.Request.SortBy?.ToLower();
         var sortDir = query.Request.SortDir?.ToLower();
-
-        departmentsQuery = (sortBy, sortDir) switch
+        
+        // Валидация sortDir, если он передан
+        if (!string.IsNullOrEmpty(sortDir) && sortDir != "asc" && sortDir != "desc")
         {
-            ("createdwhen", "desc") => departmentsQuery.OrderByDescending(d => d.CreatedWhen),
-            ("createdwhen", _)      => departmentsQuery.OrderBy(d => d.CreatedWhen),
+            throw new ValidationException($"Недопустимое направление сортировки: sortDir={sortDir}. Допустимые значения: asc, desc");
+        }
+
+        // Применяем сортировку
+        departmentsQuery = sortBy switch
+        {
+            "createdwhen" => sortDir == "desc" 
+                ? departmentsQuery.OrderByDescending(d => d.CreatedWhen)
+                : departmentsQuery.OrderBy(d => d.CreatedWhen),
     
-            ("name", "desc") => departmentsQuery.OrderByDescending(d => d.DepartmentName),
-            ("name", _)       => departmentsQuery.OrderBy(d => d.DepartmentName),
+            "name" => sortDir == "desc" 
+                ? departmentsQuery.OrderByDescending(d => d.DepartmentName)
+                : departmentsQuery.OrderBy(d => d.DepartmentName),
     
-            (null, null) => departmentsQuery.OrderBy(d => d.DepartmentName), // дефолт по заданию
+            null => departmentsQuery.OrderBy(d => d.DepartmentName), // дефолт, игнорируем sortDir
     
-            _ => throw new ArgumentException($"Недопустимые параметры сортировки: sortBy={sortBy}, sortDir={sortDir}")
+            _ => throw new ValidationException($"Недопустимое поле сортировки: sortBy={sortBy}. Допустимые значения: name, createdwhen")
         };
         
         var totalCount = await departmentsQuery.LongCountAsync(cancellationToken);
@@ -53,6 +62,11 @@ public class GetDepartmentsQueryHandler : IQueryHandler<GetDepartmentsQuery, Pag
         if (query.Request.Pagination.Page < 1)
         {
             throw new ValidationException("Номер страницы должен быть больше 0");
+        }
+        
+        if (query.Request.Pagination.PageSize <= 0)
+        {
+            throw new ValidationException("Размер страницы должен быть больше 0");
         }
 
         if (query.Request.Pagination.PageSize > 100)

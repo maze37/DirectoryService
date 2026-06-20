@@ -190,12 +190,6 @@ public class DepartmentController : ControllerBase
         var query = new GetDepartmentsQuery(request);
 
         var result = await _getByFilterHandler.HandleAsync(query, cancellationToken);
-        if (result is null)
-        {
-            _logger.LogWarning("Нет отделов с такими фильтрами.");
-            return NotFound(Envelope.Error(
-                Errors.General.NotFound()));
-        }
         
         _logger.LogInformation("Отделы получены успешно.");
         return Ok(Envelope.Ok(result));
