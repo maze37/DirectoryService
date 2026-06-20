@@ -5,6 +5,8 @@ using DirectoryService.Application.UseCases.DepartmentCases.Commands.DetachPosit
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.MoveDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.UpdateDepartmentLocations;
 using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentById;
+using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartments;
+using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +26,7 @@ public class DepartmentController : ControllerBase
     private readonly ICommandHandler<AttachPositionToDepartmentCommand, AttachPositionToDepartmentResponse> _attachPositionHandler;
     private readonly ICommandHandler<DetachPositionFromDepartmentCommand, DetachPositionFromDepartmentResponse> _detachPositionHandler;
     private readonly IQueryHandler<GetDepartmentByIdQuery, GetDepartmentDto> _getByIdHandler;
+    private readonly IQueryHandler<GetDepartmentsQuery, PagedResult<DepartmentListItemDto>> _getByFilterHandler;
     private readonly ILogger<DepartmentController> _logger;
 
     public DepartmentController(
@@ -34,6 +37,7 @@ public class DepartmentController : ControllerBase
         ICommandHandler<AttachPositionToDepartmentCommand, AttachPositionToDepartmentResponse> attachPositionHandler,
         ICommandHandler<DetachPositionFromDepartmentCommand, DetachPositionFromDepartmentResponse> detachPositionHandler,
         IQueryHandler<GetDepartmentByIdQuery, GetDepartmentDto> getByIdHandler,
+        IQueryHandler<GetDepartmentsQuery, PagedResult<DepartmentListItemDto>> getByFilterHandler,
         ILogger<DepartmentController> logger)
     {
         _createHandler = createHandler;
@@ -43,6 +47,7 @@ public class DepartmentController : ControllerBase
         _attachPositionHandler = attachPositionHandler;
         _detachPositionHandler = detachPositionHandler;
         _getByIdHandler = getByIdHandler;
+        _getByFilterHandler = getByFilterHandler;
         _logger = logger;
     }
 
@@ -174,6 +179,25 @@ public class DepartmentController : ControllerBase
         }
     
         _logger.LogInformation("Отдел {DepartmentId} получено успешно.", id);
+        return Ok(Envelope.Ok(result));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetByFilterAsync(
+        [FromQuery] GetDepartmentsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetDepartmentsQuery(request);
+
+        var result = await _getByFilterHandler.HandleAsync(query, cancellationToken);
+        if (result is null)
+        {
+            _logger.LogWarning("Нет отделов с такими фильтрами.");
+            return NotFound(Envelope.Error(
+                Errors.General.NotFound()));
+        }
+        
+        _logger.LogInformation("Отделы получены успешно.");
         return Ok(Envelope.Ok(result));
     }
 }

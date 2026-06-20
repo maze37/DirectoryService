@@ -1,4 +1,5 @@
 using CSharpFunctionalExtensions;
+using DirectoryService.Contracts.Constants;
 using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Position.ValueObjects;
 using Shared.Base;
