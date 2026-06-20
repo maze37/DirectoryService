@@ -1,5 +1,6 @@
 using DirectoryService.Application;
 using DirectoryService.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DirectoryService.Presentation.Configuration;
 
@@ -15,6 +16,11 @@ public static class Inject
             .AddSwaggerGen()
             .AddEndpointsApiExplorer()
             .AddControllers();
+
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+        });
 
         return services;
     }
