@@ -2,7 +2,9 @@
 using DirectoryService.Application.UseCases.LocationCases.Commands.CreateLocation;
 using DirectoryService.Application.UseCases.LocationCases.Commands.DeleteLocation;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetLocationById;
+using DirectoryService.Application.UseCases.LocationCases.Queries.GetLocations;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetTopLocations;
+using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +22,7 @@ public class LocationController : ControllerBase
     private readonly ICommandHandler<DeleteLocationCommand, DeleteLocationResponse> _deleteHandler;
     private readonly IQueryHandler<GetLocationByIdQuery, GetLocationDto> _getByIdHandler;
     private readonly IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>> _getTopHandler;
+    private readonly IQueryHandler<GetLocationsQuery, PagedResult<LocationListItemDto>> _getLocationsHandler;
     private readonly ILogger<LocationController> _logger;
 
     public LocationController(
@@ -27,12 +30,14 @@ public class LocationController : ControllerBase
         ICommandHandler<DeleteLocationCommand, DeleteLocationResponse> deleteHandler,
         IQueryHandler<GetLocationByIdQuery, GetLocationDto> getByIdHandler,
         IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>> getTopHandler,
+        IQueryHandler<GetLocationsQuery, PagedResult<LocationListItemDto>> getLocationsHandler,
         ILogger<LocationController> logger)
     {
         _createHandler = createHandler;
         _deleteHandler = deleteHandler;
         _getByIdHandler = getByIdHandler;
         _getTopHandler = getTopHandler;
+        _getLocationsHandler = getLocationsHandler;
         _logger = logger;
     }
 
@@ -106,6 +111,18 @@ public class LocationController : ControllerBase
         
         _logger.LogInformation("Топ локаций получен. Количество: {Count}", result?.Count ?? 0);
 
+        return Ok(Envelope.Ok(result));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetLocationsAsync(
+        [FromQuery] GetLocationsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetLocationsQuery(request);
+
+        var result = await _getLocationsHandler.HandleAsync(query, cancellationToken);
+        
         return Ok(Envelope.Ok(result));
     }
 }
