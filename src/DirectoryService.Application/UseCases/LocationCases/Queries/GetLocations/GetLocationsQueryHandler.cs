@@ -3,6 +3,7 @@ using Dapper;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
+using Microsoft.EntityFrameworkCore;
 using Shared.Core;
 using Shared.Exceptions;
 
@@ -105,18 +106,22 @@ public class GetLocationsQueryHandler : IQueryHandler<GetLocationsQuery, PagedRe
                     LIMIT @page_size OFFSET @offset
                     """;
 
-        long totalCount = 0;
+        long? totalCount = null;
+
+        var commandDefinition = new CommandDefinition(
+            commandText: sql,
+            parameters: parameters,
+            cancellationToken: cancellationToken);
 
         var locations = await connection.QueryAsync<LocationListItemDto, AddressDto, long, LocationListItemDto>(
-            sql,
+            commandDefinition,
             map: (location, address, totalRows) =>
             {
-                totalCount = totalRows;
+                totalCount ??= totalRows;
                 return location with { Address = address };
             },
-            splitOn: "country,total_rows",
-            param: parameters);
+            splitOn: "country,total_rows");
 
-        return new PagedResult<LocationListItemDto>(locations.ToList(), totalCount, query.Request.Pagination);
+        return new PagedResult<LocationListItemDto>(locations.ToList(), totalCount ?? 0, query.Request.Pagination);
     }
 }
