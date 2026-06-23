@@ -43,7 +43,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         CancellationToken cancellationToken = default)
     {
         var validationResult = await _validator.ValidateAsync(command, cancellationToken);
-        if (!validationResult.IsValid)
+        if (validationResult.IsValid == false)
             return validationResult.ToError();
 
         bool locationExists = await _locationRepository

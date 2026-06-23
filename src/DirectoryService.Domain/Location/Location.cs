@@ -45,7 +45,7 @@ public sealed class Location : AggregateRoot
     public static Result<Location, Error> Create(
         Guid id,
         string name,
-        AddressDto address,
+        Address address,
         string timezone,
         DateTimeOffset createdWhen)
     {
