@@ -29,7 +29,6 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<AppDbContext>();
-            
             services.AddScoped<AppDbContext>(_ =>
             {
                 var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -52,7 +51,6 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
 
         _dbConnection = new NpgsqlConnection(_dbContainer.GetConnectionString());
         await _dbConnection.OpenAsync();
-        
         await InitializeRespawner();
     }
 
@@ -64,7 +62,7 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
         await _dbConnection.CloseAsync();
         await _dbConnection.DisposeAsync();
     }
-    
+
     public async Task ResetDatabaseAsync()
     {
         await _respawner.ResetAsync(_dbConnection);

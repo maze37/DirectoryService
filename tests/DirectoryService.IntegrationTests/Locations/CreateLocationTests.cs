@@ -5,12 +5,12 @@ using Shared.Result;
 
 namespace DirectoryService.IntegrationTests.Locations;
 
-public class GetLocationTests : DirectoryBaseTests
+public class CreateLocationTests : DirectoryBaseTests
 {
-    public GetLocationTests(DirectoryTestWebFactory factory) : base(factory) { }
+    public CreateLocationTests(DirectoryTestWebFactory factory) : base(factory) { }
 
     [Fact]
-    public async Task GetLocationById_WithExistingId_ShouldReturn200()
+    public async Task CreateLocation_ShouldReturn200()
     {
         // Arrange
         var locationName = "Нукус";
@@ -32,16 +32,5 @@ public class GetLocationTests : DirectoryBaseTests
 
         // Assert
         Assert.NotEqual(Guid.Empty, result);
-    }
-
-    private async Task<Guid> CreateLocationViaHttp(string name, AddressDto address, string timeZone)
-    {
-        var request = new CreateLocationRequest(name, address, timeZone);
-
-        var response = await Client.PostAsJsonAsync("/api/locations", request);
-        response.EnsureSuccessStatusCode();
-        
-        var envelope = await response.Content.ReadFromJsonAsync<Envelope<CreateLocationResponse>>();
-        return envelope!.Result!.Id;
     }
 }
