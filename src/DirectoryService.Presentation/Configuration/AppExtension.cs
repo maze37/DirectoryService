@@ -16,11 +16,6 @@ public static class AppExtension
         
         app.UseSwagger();
         app.UseSwaggerUI();
-        
-        // Автоматическое применение миграций
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
 
         return app;
     }
