@@ -10,7 +10,7 @@ public class CreateLocationTests : DirectoryBaseTests
     public CreateLocationTests(DirectoryTestWebFactory factory) : base(factory) { }
 
     [Fact]
-    public async Task CreateLocation_ShouldReturn200()
+    public async Task CreateLocation_ShouldSuccess()
     {
         // Arrange
         var locationName = "Нукус";

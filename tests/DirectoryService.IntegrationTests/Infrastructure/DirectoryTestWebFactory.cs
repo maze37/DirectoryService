@@ -1,5 +1,7 @@
 ﻿using System.Data.Common;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Infrastructure;
+using DirectoryService.Infrastructure.Database;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -28,14 +30,15 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
     {
         builder.ConfigureTestServices(services =>
         {
-            services.RemoveAll<AppDbContext>();
-            services.AddScoped<AppDbContext>(_ =>
-            {
-                var options = new DbContextOptionsBuilder<AppDbContext>()
-                    .UseNpgsql(_dbContainer.GetConnectionString())
-                    .Options;
-                return new AppDbContext(options);
-            });
+            services.RemoveAll<DbContextOptions<AppDbContext>>();
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseNpgsql(_dbContainer.GetConnectionString()));
+
+            services.RemoveAll<IDbConnectionFactory>();
+            services.AddSingleton<IDbConnectionFactory>(_ =>
+                new NpgsqlConnectionFactory(_dbContainer.GetConnectionString()));
+
+            services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<AppDbContext>());
         });
     }
 

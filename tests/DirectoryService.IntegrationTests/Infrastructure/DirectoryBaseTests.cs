@@ -1,6 +1,9 @@
 ﻿using System.Net.Http.Json;
+using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Contracts.LocationContracts;
+using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.Result;
 
@@ -41,7 +44,7 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
     }
     
     protected async Task<Guid> CreateLocationViaHttp(
-        string name,
+        string name = "Test",
         AddressDto address = null!,
         string timeZone = "Europe/Moscow")
     {
@@ -56,9 +59,48 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
     
     protected static AddressDto DefaultAddress => new()
     {
-        Country = "Россия",
-        City = "Москва",
-        Street = "Тверская",
+        Country = "Test",
+        City = "Test",
+        Street = "Test",
         Building = "1"
     };
+
+    protected async Task<Guid> CreateDepartmentViaHttp(
+        string name = "Test Department",
+        string slug = "test",
+        Guid? locationId = null)
+    {
+        var locId = locationId ?? await CreateLocationViaHttp("Нукус");
+
+        var request = new CreateDepartmentRequest(
+            Name: name,
+            Slug: slug,
+            ParentId: null,
+            LocationIds: [locId]);
+
+        var response = await Client.PostAsJsonAsync("/api/departments", request);
+        response.EnsureSuccessStatusCode();
+
+        var envelope = await response.Content.ReadFromJsonAsync<Envelope<CreateDepartmentResponse>>();
+        return envelope!.Result!.Id;
+    }
+
+    protected async Task<Guid> CreatePositionViaHttp(
+        string name = "Test",
+        string? description = "",
+        Guid? departmentId = null)
+    {
+        var depId = departmentId ?? await CreateDepartmentViaHttp("test");
+
+        var request = new CreatePositionRequest(
+            Name: name,
+            Description: description,
+            DepartmentIds: [depId]);
+        
+        var response = await Client.PostAsJsonAsync("/api/positions/", request);
+        response.EnsureSuccessStatusCode();
+        
+        var envelope = await response.Content.ReadFromJsonAsync<Envelope<CreatePositionResponse>>();
+        return envelope!.Result!.Id;
+    }
 }

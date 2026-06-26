@@ -1,10 +1,9 @@
-﻿using DirectoryService.Application.UseCases.DepartmentCases.Commands.CreateDepartment;
+﻿using System.Net;
+using System.Net.Http.Json;
 using DirectoryService.Contracts.DepartmentContracts;
-using DirectoryService.Domain.Location;
-using DirectoryService.Domain.Location.ValueObjects;
 using DirectoryService.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Shared.Result;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
@@ -16,58 +15,59 @@ public class CreateDepartmentTests : DirectoryBaseTests
     public async Task CreateDepartment_WithValidData_ShouldSucceed()
     {
         // Arrange
-        Guid locationId = await CreateLocation("location 1");
+        var locationId = await CreateLocationViaHttp("TEST");
         
-        var cancellationToken = CancellationToken.None;
-
         // Act
-        var result = await ExecuteHandler(sut =>
-        {
-            var command = new CreateDepartmentCommand(new CreateDepartmentRequest(
-                "Подразделение", "zxc", null, [locationId]));
+        var departmentId = await CreateDepartmentViaHttp(locationId: locationId);
 
-            return sut.HandleAsync(command, cancellationToken);
-        });
+        // Assert DB — департамент создался
+        var department = await ExecuteInDb(async db =>
+            await db.Departments.FirstOrDefaultAsync(d => d.Id == departmentId));
 
-        // Assert
-        // хотим убедиться, что данные реально есть в бд
-        await ExecuteInDb(async dbContext =>
-        {
-            var department = await dbContext.Departments.FirstOrDefaultAsync(
-                d => d.Id == result.Value.Id, cancellationToken);
+        Assert.NotNull(department);
 
-            Assert.NotNull(department);
-            Assert.Equal(department.Id, result.Value.Id);
+        // Assert DB — привязан к локации
+        var departmentLocation = await ExecuteInDb(async db =>
+            await db.DepartmentLocations.FirstOrDefaultAsync(dl =>
+                dl.DepartmentId == departmentId &&
+                dl.LocationId == locationId));
 
-            Assert.True(result.IsSuccess); // True() - проверяет, тру ли аргумент.
-            Assert.NotEqual(Guid.Empty, result.Value.Id); // проверяет, что result.Value != Guid.Empty
-        });
+        Assert.NotNull(departmentLocation);
     }
     
-    private async Task<Guid> CreateLocation(string locationName)
+    [Fact]
+    public async Task CreateDepartment_WithNonExistingLocation_ShouldFail()
     {
-        return await ExecuteInDb(async dbContext =>
-        {
-            var location = Location.Create(
-                Guid.NewGuid(),
-                locationName,
-                Address.Create(country: "Каракалпакстан", city: "Нукус", street: "Каракалпакстан", building: "1").Value,
-                Timezone.Create("Asia/Tashkent").Value,
-                DateTimeOffset.UtcNow);
+        // Arrange — локация не существует
+        var request = new CreateDepartmentRequest(
+            Name: "testName",
+            Slug: "test",
+            ParentId: null,
+            LocationIds: [Guid.NewGuid()]);
 
-            dbContext.Locations.Add(location.Value);
-            await dbContext.SaveChangesAsync();
+        // Act
+        var response = await Client.PostAsJsonAsync("/api/departments", request);
 
-            return location.Value.Id;
-        });
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    private async Task<T> ExecuteHandler<T>(Func<CreateDepartmentCommandHandler, Task<T>> action)
+    [Fact]
+    public async Task CreateDepartment_WithEmptyName_ShouldFail()
     {
-        await using var scope = Services.CreateAsyncScope();
+        // Arrange
+        var createdLocationId = await CreateLocationViaHttp("Нукус");
 
-        var sut = scope.ServiceProvider.GetRequiredService<CreateDepartmentCommandHandler>();
+        var request = new CreateDepartmentRequest(
+            Name: "",
+            Slug: "test",
+            ParentId: null,
+            LocationIds: [createdLocationId]);
 
-        return await action(sut);
+        // Act
+        var response = await Client.PostAsJsonAsync("/api/departments", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }
