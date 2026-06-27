@@ -205,4 +205,10 @@ public sealed class Department : AggregateRoot
         IsDeleted = true;
         DeletedWhen = deletedWhen;
     }
+    
+    public void Restore()
+    {
+        IsDeleted = false;
+        DeletedWhen = null;
+    }
 }

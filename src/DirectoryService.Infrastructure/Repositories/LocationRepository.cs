@@ -36,14 +36,12 @@ public class LocationRepository : ILocationRepository
     {
         try
         {
-            // 1. Блокируем строку через Dapper
             var dbConn = _context.Database.GetDbConnection();
             await dbConn.ExecuteAsync(new CommandDefinition(
-                "SELECT 1 FROM locations WHERE id = @id FOR UPDATE",
+                "SELECT 1 FROM locations WHERE id = @id AND is_deleted = false FOR UPDATE",
                 new { id },
                 cancellationToken: cancellationToken));
 
-            // 2. Загружаем через EF Core — работает с ComplexProperty
             var location = await _context.Locations
                 .FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
 

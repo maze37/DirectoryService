@@ -50,10 +50,9 @@ public class PositionRepository : IPositionRepository
                 .FromSqlRaw("""
                             SELECT id, description, is_active, created_when, updated_when, name, xmin
                             FROM positions
-                            WHERE id = {0}
+                            WHERE id = {0} AND is_deleted = false
                             FOR UPDATE
                             """, positionId)
-                
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (position is null)

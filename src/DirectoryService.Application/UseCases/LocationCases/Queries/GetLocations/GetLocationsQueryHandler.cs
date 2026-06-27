@@ -3,7 +3,6 @@ using Dapper;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
-using Microsoft.EntityFrameworkCore;
 using Shared.Core;
 using Shared.Exceptions;
 
@@ -62,7 +61,6 @@ public class GetLocationsQueryHandler : IQueryHandler<GetLocationsQuery, PagedRe
             _ => throw new ValidationException($"Недопустимое поле сортировки: sortBy={sortBy}")
         };
         
-        // Валидация пагинации
         if (query.Request.Pagination.Page < 1)
         {
             throw new ValidationException("Номер страницы должен быть больше 0");
@@ -90,6 +88,7 @@ public class GetLocationsQueryHandler : IQueryHandler<GetLocationsQuery, PagedRe
                             COUNT(dl.location_id) as total_count
                         FROM locations l
                         LEFT JOIN department_locations dl ON l.id = dl.location_id
+                        WHERE l.is_deleted = false
                         GROUP BY l.id
                     )
                     SELECT
@@ -105,6 +104,7 @@ public class GetLocationsQueryHandler : IQueryHandler<GetLocationsQuery, PagedRe
                         COUNT(*) OVER() as total_rows
                     FROM locations l 
                     LEFT JOIN total_departments_count tdc ON l.id = tdc.location_id
+                    WHERE l.is_deleted = false
                     {whereClause}
                     ORDER BY {orderByClause}
                     LIMIT @page_size OFFSET @offset

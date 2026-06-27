@@ -35,5 +35,9 @@ public class AppDbContext : DbContext, IReadDbContext
 
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(AppDbContext).Assembly);
+        
+        modelBuilder.Entity<Department>().HasQueryFilter(d => d.IsDeleted == false);
+        modelBuilder.Entity<Location>().HasQueryFilter(l => l.IsDeleted == false);
+        modelBuilder.Entity<Position>().HasQueryFilter(p => p.IsDeleted == false);
     }
 }

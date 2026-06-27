@@ -22,7 +22,6 @@
     <Folder Include="UseCases\DepartmentCases\Commands\" />
     <Folder Include="UseCases\LocationCases\Commands\" />
     <Folder Include="UseCases\PositionCases\Commands\" />
-    <Folder Include="UseCases\PositionCases\Queries\" />
   </ItemGroup>
 
   <PropertyGroup>

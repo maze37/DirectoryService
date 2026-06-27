@@ -5,7 +5,6 @@ using DirectoryService.Domain.Department;
 using Microsoft.EntityFrameworkCore;
 using Shared.Result;
 using Dapper;
-using DirectoryService.Domain.Department.ValueObjects;
 using DirectoryService.Domain.DepartmentPositions;
 using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
@@ -56,7 +55,7 @@ public class DepartmentRepository : IDepartmentRepository
                                 SELECT id, parent_id, depth, children_count, is_active, 
                                        created_when, updated_when, name, slug, path, xmin
                                 FROM departments 
-                                WHERE id = {0} 
+                                WHERE id = {0} AND is_deleted = false
                                 FOR UPDATE
                                 """, departmentId)
                     .FirstOrDefaultAsync(cancellationToken);
@@ -97,10 +96,9 @@ public class DepartmentRepository : IDepartmentRepository
 
     public async Task<bool> ExistsBySlugWithLockAsync(string slug, CancellationToken cancellationToken)
     {
-        const string sql = "SELECT 1 FROM departments WHERE slug = @slug FOR UPDATE";
+        const string sql = "SELECT 1 FROM departments WHERE slug = @slug AND is_deleted = false FOR UPDATE";
     
         var dbConn = _context.Database.GetDbConnection();
-        // Здесь важно: если _context в транзакции, то dbConn тоже в ней
         var result = await dbConn.ExecuteScalarAsync<int?>(
             new CommandDefinition(sql, new { slug }, cancellationToken: cancellationToken));
     
@@ -120,9 +118,6 @@ public class DepartmentRepository : IDepartmentRepository
         await _context.DepartmentLocations.AddRangeAsync(department.Locations, cancellationToken);
     }
 
-    /// <summary>
-    /// Вернет false, если не потомок и не сам department.
-    /// </summary>
     public async Task<bool> IsDescendantOrSelfAsync(
         Path potentialParentPath,
         Path departmentPath, 
@@ -136,7 +131,6 @@ public class DepartmentRepository : IDepartmentRepository
                                  """;
         
         var dbConn = _context.Database.GetDbConnection();
-        // для одного значения (bool) в даппере можно юзать ExecuteScalarAsync
         var result = await dbConn.ExecuteScalarAsync<bool>(dapperSql, new
         {
             potentialParentPath = potentialParentPath.Value,
@@ -149,7 +143,7 @@ public class DepartmentRepository : IDepartmentRepository
     {
         const string dapperSql = """
                                     SELECT 1 FROM departments
-                                    WHERE path <@ @oldPath::ltree
+                                    WHERE path <@ @oldPath::ltree AND is_deleted = false
                                     FOR UPDATE
                                  """;
 
@@ -176,7 +170,7 @@ public class DepartmentRepository : IDepartmentRepository
                                         WHEN id = @departmentId THEN @newParentId
                                         ELSE parent_id
                                         END
-                                 WHERE path <@ @oldPath::ltree
+                                 WHERE path <@ @oldPath::ltree AND is_deleted = false
                                  """;
 
         var dbConn = _context.Database.GetDbConnection();
@@ -218,7 +212,6 @@ public class DepartmentRepository : IDepartmentRepository
         }
     }
     
-
     public void AddPositionLink(DepartmentPosition link)
     {
         _context.DepartmentPositions.Add(link);

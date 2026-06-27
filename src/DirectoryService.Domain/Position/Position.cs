@@ -110,4 +110,10 @@ public sealed class Position : AggregateRoot
         IsDeleted = true;
         DeletedWhen = deletedWhen;
     }
+    
+    public void Restore()
+    {
+        IsDeleted = false;
+        DeletedWhen = null;
+    }
 }
