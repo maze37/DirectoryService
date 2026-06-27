@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DirectoryService.IntegrationTests.Locations;
 
-public class DeleteLocations : DirectoryBaseTests
+public class DeleteLocationsTests : DirectoryBaseTests
 {
-    public DeleteLocations(DirectoryTestWebFactory factory) : base(factory) { }
+    public DeleteLocationsTests(DirectoryTestWebFactory factory) : base(factory) { }
     
     [Fact]
     public async Task DeleteLocation_WithLinkedDepartments_Returns409()
