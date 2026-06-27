@@ -79,16 +79,8 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
             ParentId: parentId,
             LocationIds: [locId]);
 
-        // var response = await Client.PostAsJsonAsync("/api/departments", request);
-        // response.EnsureSuccessStatusCode();
-        
         var response = await Client.PostAsJsonAsync("/api/departments", request);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var body = await response.Content.ReadAsStringAsync();
-            throw new Exception(body);
-        }
+        response.EnsureSuccessStatusCode();
 
         var envelope = await response.Content.ReadFromJsonAsync<Envelope<CreateDepartmentResponse>>();
         return envelope!.Result!.Id;
