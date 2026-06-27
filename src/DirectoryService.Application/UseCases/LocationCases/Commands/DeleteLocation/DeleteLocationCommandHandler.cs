@@ -15,17 +15,20 @@ public class DeleteLocationCommandHandler : ICommandHandler<DeleteLocationComman
     private readonly ITransactionManager _transactionManager;
     private readonly ILogger<DeleteLocationCommandHandler> _logger;
     private readonly IValidator<DeleteLocationCommand> _validator;
+    private readonly IDateTimeProvider _dateTime;
 
     public DeleteLocationCommandHandler(
         ILocationRepository locationRepository,
         ITransactionManager transactionManager,
         ILogger<DeleteLocationCommandHandler> logger,
-        IValidator<DeleteLocationCommand> validator)
+        IValidator<DeleteLocationCommand> validator,
+        IDateTimeProvider dateTime)
     {
         _locationRepository = locationRepository;
         _transactionManager = transactionManager;
         _logger = logger;
         _validator = validator;
+        _dateTime = dateTime;
     }
 
     public async Task<Result<DeleteLocationResponse, Error>> HandleAsync(
@@ -53,11 +56,11 @@ public class DeleteLocationCommandHandler : ICommandHandler<DeleteLocationComman
             return locationResult.Error;
         }
         
-        var hasLinks = await _locationRepository.HasDepartmentLinksAsync(command.Id, cancellationToken);
-        if (hasLinks)
-            return Error.Conflict("location.has.links", "Локация привязана к подразделениям. Сначала отвяжите её.");
+        // var hasLinks = await _locationRepository.HasDepartmentLinksAsync(command.Id, cancellationToken);
+        // if (hasLinks)
+        //    return Error.Conflict("location.has.links", "Локация привязана к подразделениям. Сначала отвяжите её.");
 
-        _locationRepository.Remove(locationResult.Value);
+        locationResult.Value.SoftDelete(_dateTime.UtcNow);
         
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)

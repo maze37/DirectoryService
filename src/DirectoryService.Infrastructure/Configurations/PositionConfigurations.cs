@@ -1,5 +1,4 @@
 ﻿using DirectoryService.Contracts.Constants;
-using DirectoryService.Domain;
 using DirectoryService.Domain.Position;
 using DirectoryService.Domain.Position.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -43,6 +42,9 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
         builder.Property(p => p.UpdatedWhen)
             .HasColumnName("updated_when")
             .IsRequired();
+        
+        builder.Property(d => d.IsDeleted).HasColumnName("is_deleted").IsRequired(false);
+        builder.Property(d => d.DeletedWhen).HasColumnName("deleted_when").IsRequired(false);
 
         builder.HasMany(p => p.DepartmentPosition)
             .WithOne()

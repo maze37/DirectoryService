@@ -62,6 +62,16 @@ public sealed class Department : AggregateRoot
     public bool IsActive { get; private set; }
     
     /// <summary>
+    /// Soft Delete.
+    /// </summary>
+    public bool? IsDeleted { get; private set; }
+    
+    /// <summary>
+    /// Дата и время удаления.
+    /// </summary>
+    public DateTimeOffset? DeletedWhen { get; private set; }
+    
+    /// <summary>
     /// Дата и время создания.
     /// </summary>
     public DateTimeOffset CreatedWhen { get; private set; }
@@ -188,5 +198,11 @@ public sealed class Department : AggregateRoot
     {
         ChildrenCount--;
         UpdatedWhen = updatedWhen;
+    }
+
+    public void SoftDelete(DateTimeOffset deletedWhen)
+    {
+        IsDeleted = true;
+        DeletedWhen = deletedWhen;
     }
 }

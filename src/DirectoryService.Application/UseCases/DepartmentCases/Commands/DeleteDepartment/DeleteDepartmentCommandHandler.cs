@@ -15,17 +15,20 @@ public class DeleteDepartmentCommandHandler : ICommandHandler<DeleteDepartmentCo
     private readonly ITransactionManager _transactionManager;
     private readonly ILogger<DeleteDepartmentCommandHandler> _logger;
     private readonly IValidator<DeleteDepartmentCommand> _validator;
+    private readonly IDateTimeProvider _dateTime;
 
     public DeleteDepartmentCommandHandler(
         IDepartmentRepository departmentRepository,
         ITransactionManager transactionManager,
         ILogger<DeleteDepartmentCommandHandler> logger,
-        IValidator<DeleteDepartmentCommand> validator)
+        IValidator<DeleteDepartmentCommand> validator,
+        IDateTimeProvider dateTime)
     {
         _departmentRepository = departmentRepository;
         _transactionManager = transactionManager;
         _logger = logger;
         _validator = validator;
+        _dateTime = dateTime;
     }
 
     public async Task<Result<DeleteDepartmentResponse, Error>> HandleAsync(
@@ -49,7 +52,7 @@ public class DeleteDepartmentCommandHandler : ICommandHandler<DeleteDepartmentCo
             return departmentResult.Error;
         }
         
-        await _departmentRepository.DeleteWithDescendants(departmentResult.Value.Path, cancellationToken);
+        departmentResult.Value.SoftDelete(_dateTime.UtcNow);
 
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)

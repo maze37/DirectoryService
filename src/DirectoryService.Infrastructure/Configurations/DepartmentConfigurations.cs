@@ -1,5 +1,4 @@
 ﻿using DirectoryService.Contracts.Constants;
-using DirectoryService.Domain;
 using DirectoryService.Domain.Department;
 using DirectoryService.Domain.Department.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -54,6 +53,8 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         builder.Property(d => d.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(d => d.CreatedWhen).HasColumnName("created_when").IsRequired();
         builder.Property(d => d.UpdatedWhen).HasColumnName("updated_when").IsRequired();
+        builder.Property(d => d.IsDeleted).HasColumnName("is_deleted").IsRequired(false);
+        builder.Property(d => d.DeletedWhen).HasColumnName("deleted_when").IsRequired(false);
 
         builder.HasMany(d => d.Locations)
             .WithOne()
