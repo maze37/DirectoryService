@@ -1,10 +1,17 @@
 using System.Collections;
+using System.Text.Json.Serialization;
 
 namespace Shared.Result;
 
+[JsonConverter(typeof(ErrorListJsonConverter))]
 public class ErrorList : IEnumerable<Error>
 {
     private readonly List<Error> _errors;
+
+    public ErrorList()
+    {
+        _errors = [];
+    }
 
     public ErrorList(IEnumerable<Error> errors)
     {

@@ -5,6 +5,7 @@ using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
+using DirectoryService.Domain.Location.ValueObjects;
 using FluentValidation;
 using Serilog;
 using Shared.Core;
@@ -40,11 +41,21 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         var validationResult = await _validator.ValidateAsync(command, cancellationToken);
         if (!validationResult.IsValid)
             return validationResult.ToError();
+
+        var address = Address.Create(command.Request.Address.Country,
+            command.Request.Address.City,
+            command.Request.Address.Street,
+            command.Request.Address.Building,
+            command.Request.Address.Office,
+            command.Request.Address.PostalCode);
+
+        if (address.IsFailure)
+            return address.Error;
         
         var locationResult = Location.Create(
             Guid.NewGuid(),
             command.Request.Name,
-            command.Request.Address,
+            address.Value,
             command.Request.Timezone,
             _date.UtcNow);
 

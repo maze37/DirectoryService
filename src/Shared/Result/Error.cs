@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Shared.Result;
 
 public record Error
@@ -11,6 +12,7 @@ public record Error
     public ErrorType Type { get; }
     public string? InvalidField { get; }
 
+    [JsonConstructor]
     private Error(string code, string message, ErrorType type, string? invalidField = null)
     {
         Code = code;

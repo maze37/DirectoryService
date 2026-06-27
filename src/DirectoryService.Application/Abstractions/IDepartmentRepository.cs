@@ -67,7 +67,7 @@ public interface IDepartmentRepository
     /// <summary>
     /// Проверяет существует ли подразделение с указанным идентификатором.
     /// </summary>
-    Task<bool> ExistsByIdentifierAsync(string identifier, CancellationToken cancellationToken = default);
+    Task<bool> ExistsBySlugWithLockAsync(string identifier, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Обновляет список локаций подразделения в ChangeTracker.
