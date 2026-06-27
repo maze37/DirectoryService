@@ -3,6 +3,7 @@ using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.DepartmentContracts;
+using DirectoryService.Domain.Department;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Shared.Core;
@@ -32,76 +33,95 @@ public class MoveDepartmentCommandHandler : ICommandHandler<MoveDepartmentComman
     }
 
     public async Task<Result<MoveDepartmentResponse, Error>> HandleAsync(
-    MoveDepartmentCommand command,
-    CancellationToken cancellationToken)
+        MoveDepartmentCommand command,
+        CancellationToken cancellationToken)
     {
+        // 1. Валидация команды
         var validationResult = await _validator.ValidateAsync(command, cancellationToken);
         if (!validationResult.IsValid)
             return validationResult.ToError();
 
+        // 2. Открываем транзакцию
         var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transactionScopeResult.IsFailure)
             return transactionScopeResult.Error;
 
         using var transactionScope = transactionScopeResult.Value;
 
-        // 1. Получаем department с блокировкой
+        // 3. Получаем перемещаемый отдел с блокировкой
         var departmentResult = await _departmentRepository.GetByIdWithLock(
             command.DepartmentId, cancellationToken);
         if (departmentResult.IsFailure)
             return departmentResult.Error;
 
-        if (!departmentResult.Value.IsActive)
+        var department = departmentResult.Value;
+
+        if (!department.IsActive)
             return Error.Failure("department.inactive", "Отдел неактивен");
 
-        var department = departmentResult.Value;
-        string newParentPath = "";
-        Guid? newParentId = null;
+        // 4. Получаем нового родителя с блокировкой (если указан)
+        Department? newParent = null;
 
-        // 2. Если parentId указан — проверяем его
-        if (command.Request.ParentId != null)
+        if (command.Request.ParentId is { } newParentId)
         {
-            if (command.DepartmentId == command.Request.ParentId)
-                return Error.Failure("department.self.parent", "Нельзя выбрать себя родителем.");
+            if (command.DepartmentId == newParentId)
+                return Error.Conflict("department.self.parent", "Нельзя выбрать себя родителем.");
 
-            var parentResult = await _departmentRepository.GetByIdWithLock(
-                command.Request.ParentId.Value, cancellationToken);
-            if (parentResult.IsFailure)
-                return parentResult.Error;
+            var newParentResult = await _departmentRepository.GetByIdWithLock(
+                newParentId, cancellationToken);
+            if (newParentResult.IsFailure)
+                return newParentResult.Error;
 
-            if (!parentResult.Value.IsActive)
-                return Error.Failure("parent.department.inactive", "Родительский отдел неактивен");
+            newParent = newParentResult.Value;
 
-            // 3. Проверяем зацикливание
+            if (!newParent.IsActive)
+                return Error.Conflict("parent.department.inactive", "Родительский отдел неактивен");
+
+            // 5. Проверяем зацикливание
             var isDescendant = await _departmentRepository.IsDescendantOrSelfAsync(
-                parentResult.Value.Path, department.Path, cancellationToken);
+                newParent.Path, department.Path, cancellationToken);
             if (isDescendant)
-                return Error.Failure("department.cycle", "Нельзя выбрать потомка родителем.");
-
-            newParentPath = parentResult.Value.Path;
-            newParentId = parentResult.Value.Id;
+                return Error.Conflict("department.cycle", "Нельзя выбрать потомка родителем.");
         }
 
-        // 4. Блокируем всех потомков
+        // 6. Получаем старого родителя с блокировкой (до мутации)
+        Department? oldParent = null;
+
+        if (department.ParentId is { } oldParentId)
+        {
+            var oldParentResult = await _departmentRepository.GetByIdWithLock(
+                oldParentId, cancellationToken);
+            if (oldParentResult.IsFailure)
+                return oldParentResult.Error;
+
+            oldParent = oldParentResult.Value;
+        }
+
+        // 7. Блокируем потомков и перемещаем
         await _departmentRepository.LockDescendantsAsync(department.Path, cancellationToken);
 
-        // 5. Перемещаем
         await _departmentRepository.MoveDepartmentAsync(
-            department.Path, newParentPath, department.Id, newParentId, cancellationToken);
+            department.Path,
+            newParent?.Path ?? string.Empty,
+            department.Id,
+            newParent?.Id,
+            cancellationToken);
 
-        // 6. Сохраняем
+        // 8. Обновляем счётчики детей
+        newParent?.IncrementChildrenCount(_dateTime.UtcNow);
+        oldParent?.DecrementChildrenCount(_dateTime.UtcNow);
+
+        // 9. Сохраняем и коммитим
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return saveResult.Error;
-        }
+            return saveResult.Error; // Dispose transactionScope сделает rollback
 
         var commitResult = transactionScope.Commit();
         if (commitResult.IsFailure)
             return commitResult.Error;
 
-        _logger.LogInformation("Подразделение {DepartmentId} перенесено", department.Id);
+        _logger.LogInformation("Подразделение {DepartmentId} перенесено в {NewParentId}",
+            department.Id, newParent?.Id);
 
         return new MoveDepartmentResponse(department.Id);
     }

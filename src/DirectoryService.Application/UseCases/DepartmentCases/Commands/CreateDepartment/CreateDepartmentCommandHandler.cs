@@ -2,11 +2,12 @@
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Application.Validation;
-using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department;
 using DirectoryService.Domain.DepartmentLocations;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Serilog;
 using Shared.Core;
 using Shared.Result;
@@ -46,13 +47,21 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         if (validationResult.IsValid == false)
             return validationResult.ToError();
 
+        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transactionScopeResult.IsFailure)
+            return transactionScopeResult.Error;
+
+        using var transactionScope = transactionScopeResult.Value;
+        
         bool locationExists = await _locationRepository
             .AllExistAsync(command.Request.LocationIds, cancellationToken);
         if (!locationExists)
             return Errors.General.NotFound(name: "locations");
 
+        // Для несуществующих строк в бд FOR UPDATE не сработает.
+        // Для красоты стоит, но есть уникальный индекс в бд который спасает от race condition.
         var identifierExists = await _departmentRepository
-            .ExistsByIdentifierAsync(command.Request.Slug, cancellationToken);
+            .ExistsBySlugWithLockAsync(command.Request.Slug, cancellationToken);
         if (identifierExists)
             return Error.Conflict("department.identifier.taken", "Отдел с таким идентификатором уже существует");
 
@@ -86,6 +95,8 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
 
             if (!parent.IsActive)
                 return Error.Failure("department.parent.inactive", "Родительский отдел неактивен");
+            
+            parent.IncrementChildrenCount(_dateTime.UtcNow);
 
             departmentResult = Department.CreateChild(
                 departmentId,
@@ -100,17 +111,29 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
             return departmentResult.Error;
         
         _departmentRepository.Add(departmentResult.Value);
-
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
+        
+        try 
         {
-            var constraint = saveResult.Error.InvalidField ?? "";
-
-            if (constraint.Contains(IndexConstants.Departments.slug))
-                return Error.Conflict("department.identifier.taken", "Отдел с таким идентификатором уже существует");
-
-            return saveResult.Error;
+            var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken); 
+            if (saveResult.IsFailure) 
+            { 
+                transactionScope.Rollback(); 
+                return saveResult.Error; 
+            } 
+        } 
+        catch (DbUpdateException ex) when 
+            (ex.InnerException is PostgresException postgres && 
+             postgres.SqlState == PostgresErrorCodes.UniqueViolation && 
+             postgres.ConstraintName == "ux_departments_slug") 
+        { 
+            transactionScope.Rollback(); 
+            return Error.Conflict( "department.identifier.taken", 
+                "Отдел с таким идентификатором уже существует"); 
         }
+
+        var commitResult = transactionScope.Commit();
+        if (commitResult.IsFailure)
+            return commitResult.Error;
         
         _logger.Information("Отдел {Name} создан", command.Request.Name);
         return new CreateDepartmentResponse(departmentResult.Value.Id);

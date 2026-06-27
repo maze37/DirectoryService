@@ -95,14 +95,16 @@ public class DepartmentRepository : IDepartmentRepository
         return count == ids.Length;
     }
 
-    public async Task<bool> ExistsByIdentifierAsync(string identifier, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsBySlugWithLockAsync(string slug, CancellationToken cancellationToken)
     {
-        identifier = identifier.Trim();
-        
-        var identifierValue = Slug.From(identifier);
-
-        return await _context.Departments
-            .AnyAsync(d => d.Slug == identifierValue, cancellationToken);
+        const string sql = "SELECT 1 FROM departments WHERE slug = @slug FOR UPDATE";
+    
+        var dbConn = _context.Database.GetDbConnection();
+        // Здесь важно: если _context в транзакции, то dbConn тоже в ней
+        var result = await dbConn.ExecuteScalarAsync<int?>(
+            new CommandDefinition(sql, new { slug }, cancellationToken: cancellationToken));
+    
+        return result.HasValue;
     }
 
     public async Task UpdateLocationsAsync(

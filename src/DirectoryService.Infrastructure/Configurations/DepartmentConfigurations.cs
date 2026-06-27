@@ -31,6 +31,10 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
                 value => Slug.From(value))
             .IsRequired();
         
+        builder.HasIndex(d => d.Slug)
+            .IsUnique()
+            .HasDatabaseName("ux_departments_slug");
+        
         builder.Property(d => d.Path)
             .HasColumnName("path")
             .HasColumnType("ltree")

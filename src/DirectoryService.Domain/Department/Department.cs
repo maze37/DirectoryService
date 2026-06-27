@@ -139,7 +139,7 @@ public sealed class Department : AggregateRoot
     public static Result<Department, Error> CreateChild(
         Guid id,
         string name,
-        string identifier,
+        string slug,
         Department parentDepartment,
         DateTimeOffset createdWhen,
         List<DepartmentLocation> departmentLocations)
@@ -151,16 +151,16 @@ public sealed class Department : AggregateRoot
         if (nameResult.IsFailure)
             return nameResult.Error;
 
-        var identifierResult = Slug.Create(identifier);
-        if (identifierResult.IsFailure)
-            return identifierResult.Error;
+        var slugResult = Slug.Create(slug);
+        if (slugResult.IsFailure)
+            return slugResult.Error;
         
-        var path = parentDepartment.Path.CreateChild(identifierResult.Value);
+        var path = parentDepartment.Path.CreateChild(slugResult.Value);
         
         return new Department(
             id,
             nameResult.Value,
-            identifierResult.Value,
+            slugResult.Value,
             parentId: parentDepartment.Id,
             path,
             depth: parentDepartment.Depth + 1,
@@ -175,6 +175,18 @@ public sealed class Department : AggregateRoot
     {
         _departmentLocations.Clear();
         _departmentLocations.AddRange(newLocations);
+        UpdatedWhen = updatedWhen;
+    }
+    
+    public void IncrementChildrenCount(DateTimeOffset updatedWhen)
+    {
+        ChildrenCount++;
+        UpdatedWhen = updatedWhen;
+    }
+
+    public void DecrementChildrenCount(DateTimeOffset updatedWhen)
+    {
+        ChildrenCount--;
         UpdatedWhen = updatedWhen;
     }
 }

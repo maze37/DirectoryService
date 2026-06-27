@@ -38,6 +38,10 @@ public class GetLocationsQueryHandler : IQueryHandler<GetLocationsQuery, PagedRe
         // MinDepartmentCount
         if (query.Request.MinDepartmentCount.HasValue)
         {
+            if (query.Request.MinDepartmentCount < 0)
+            {
+                throw new ValidationException("Минимальное количество отделов не может быть меньше 0.");
+            }
             conditions.Add("tdc.total_count >= @minDepartmentCount");
             parameters.Add("minDepartmentCount", query.Request.MinDepartmentCount.Value);
         }

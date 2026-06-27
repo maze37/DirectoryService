@@ -66,8 +66,9 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
     };
 
     protected async Task<Guid> CreateDepartmentViaHttp(
+        string slug,
         string name = "Test Department",
-        string slug = "test",
+        Guid? parentId = null,
         Guid? locationId = null)
     {
         var locId = locationId ?? await CreateLocationViaHttp("Нукус");
@@ -75,11 +76,19 @@ public class DirectoryBaseTests : IClassFixture<DirectoryTestWebFactory>, IAsync
         var request = new CreateDepartmentRequest(
             Name: name,
             Slug: slug,
-            ParentId: null,
+            ParentId: parentId,
             LocationIds: [locId]);
 
+        // var response = await Client.PostAsJsonAsync("/api/departments", request);
+        // response.EnsureSuccessStatusCode();
+        
         var response = await Client.PostAsJsonAsync("/api/departments", request);
-        response.EnsureSuccessStatusCode();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            throw new Exception(body);
+        }
 
         var envelope = await response.Content.ReadFromJsonAsync<Envelope<CreateDepartmentResponse>>();
         return envelope!.Result!.Id;
