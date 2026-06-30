@@ -43,7 +43,7 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
             .HasColumnName("updated_when")
             .IsRequired();
         
-        builder.Property(d => d.IsDeleted).HasColumnName("is_deleted").IsRequired(false);
+        builder.Property(d => d.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
         builder.Property(d => d.DeletedWhen).HasColumnName("deleted_when").IsRequired(false);
 
         builder.HasMany(p => p.DepartmentPosition)

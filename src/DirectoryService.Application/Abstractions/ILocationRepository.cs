@@ -32,4 +32,9 @@ public interface ILocationRepository
     /// Помечает локацию удаленной в ChangeTracker.
     /// </summary>
     void Remove(Location location);
+    
+    Task<int> DeleteSoftDeletedBatchAsync(
+        DateTime olderThanUtc,
+        int batchSize,
+        CancellationToken cancellationToken);
 }

@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Domain.Position;
 using DirectoryService.Domain.Position.ValueObjects;
@@ -70,4 +71,56 @@ public class PositionRepository : IPositionRepository
     {
         _context.Positions.Update(position);
     }
+    
+    public async Task<int> DeleteSoftDeletedBatchAsync(
+        DateTime olderThanUtc,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           DELETE FROM positions
+                           WHERE id IN (
+                               SELECT id FROM positions
+                               WHERE is_deleted = true AND deleted_when < @OlderThanUtc
+                               ORDER BY deleted_when
+                               LIMIT @BatchSize
+                           )
+                           """;
+
+        var connection = _context.Database.GetDbConnection();
+
+        var rowsAffected = await connection.ExecuteAsync(
+            new CommandDefinition(
+                sql,
+                new { OlderThanUtc = olderThanUtc, BatchSize = batchSize },
+                cancellationToken: cancellationToken));
+
+        return rowsAffected;
+    }
+    
+    /*
+    public async Task<int> DeleteSoftDeletedBatchAsync(
+        DateTime olderThanUtc,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        var idsToDelete = await _context.Positions
+            .IgnoreQueryFilters() // иначе глобальный фильтр is_deleted=false скроет сами кандидаты на удаление
+            .Where(d => d.IsDeleted && d.DeletedWhen < olderThanUtc)
+            .OrderBy(d => d.DeletedAt)
+            .Take(batchSize)
+            .Select(d => d.Id)
+            .ToListAsync(cancellationToken);
+
+        if (idsToDelete.Count == 0)
+            return 0;
+
+        var rowsAffected = await _context.Positions
+            .IgnoreQueryFilters()
+            .Where(d => idsToDelete.Contains(d.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+
+        return rowsAffected;
+    }
+    */
 }

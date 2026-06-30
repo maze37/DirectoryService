@@ -53,7 +53,7 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
         builder.Property(d => d.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(d => d.CreatedWhen).HasColumnName("created_when").IsRequired();
         builder.Property(d => d.UpdatedWhen).HasColumnName("updated_when").IsRequired();
-        builder.Property(d => d.IsDeleted).HasColumnName("is_deleted").IsRequired(false);
+        builder.Property(d => d.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
         builder.Property(d => d.DeletedWhen).HasColumnName("deleted_when").IsRequired(false);
 
         builder.HasMany(d => d.Locations)
