@@ -211,4 +211,6 @@ public sealed class Department : AggregateRoot
         IsDeleted = false;
         DeletedWhen = null;
     }
+    
+    public void SetDeletedWhenForTest(DateTimeOffset value) => DeletedWhen = value;
 }

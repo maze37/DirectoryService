@@ -70,7 +70,7 @@ public class LocationRepository : ILocationRepository
     }
     
     public async Task<int> DeleteSoftDeletedBatchAsync(
-        DateTime olderThanUtc,
+        DateTimeOffset olderThanUtc,
         int batchSize,
         CancellationToken cancellationToken)
     {

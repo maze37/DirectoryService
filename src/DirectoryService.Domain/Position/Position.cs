@@ -116,4 +116,6 @@ public sealed class Position : AggregateRoot
         IsDeleted = false;
         DeletedWhen = null;
     }
+    
+    public void SetDeletedWhenForTest(DateTimeOffset value) => DeletedWhen = value;
 }

@@ -34,7 +34,7 @@ public interface ILocationRepository
     void Remove(Location location);
     
     Task<int> DeleteSoftDeletedBatchAsync(
-        DateTime olderThanUtc,
+        DateTimeOffset olderThanUtc,
         int batchSize,
         CancellationToken cancellationToken);
 }
