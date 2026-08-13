@@ -32,7 +32,9 @@ public class LocationRepository : ILocationRepository
         return existingCount == locationIds.Count;
     }
 
-    public async Task<Result<Location, Error>> GetByIdWithLock(Guid id, CancellationToken cancellationToken)
+    public async Task<Result<Location, Error>> GetByIdWithLock(
+        Guid id, 
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -85,6 +87,9 @@ public class LocationRepository : ILocationRepository
                            """;
 
         var connection = _context.Database.GetDbConnection();
+        
+        if (connection.State != System.Data.ConnectionState.Open)
+            await _context.Database.OpenConnectionAsync(cancellationToken);
 
         var rowsAffected = await connection.ExecuteAsync(
             new CommandDefinition(

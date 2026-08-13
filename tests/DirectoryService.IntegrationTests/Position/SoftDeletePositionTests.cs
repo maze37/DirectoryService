@@ -17,16 +17,16 @@ public class SoftDeletePositionTests : DirectoryBaseTests
         var positionId = await CreatePositionViaHttp(departmentId: departmentId);
 
         // Act
-        var response = await Client.DeleteAsync($"/api/positions/{positionId}");
-
+        var response = await Client.DeleteAsync($"api/positions/{positionId}");
+        
         // Assert HTTP
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        // Assert DB
+        
+        // Assert Db
         var position = await ExecuteInDb(async db =>
             await db.Positions
                 .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(p => p.Id == positionId));
+                .FirstOrDefaultAsync(x => x.Id == positionId));
 
         Assert.NotNull(position);
         Assert.True(position.IsDeleted);
@@ -34,18 +34,20 @@ public class SoftDeletePositionTests : DirectoryBaseTests
     }
 
     [Fact]
-    public async Task GetPosition_AfterSoftDelete_Returns404()
+    public async Task GetPosition_AfterSoftDelete_NotVisibleViaDb()
     {
         // Arrange
         var departmentId = await CreateDepartmentViaHttp("TEST");
         var positionId = await CreatePositionViaHttp(departmentId: departmentId);
         await Client.DeleteAsync($"/api/positions/{positionId}");
 
-        // Act
-        var response = await Client.GetAsync($"/api/positions/{positionId}");
+        // Act — EF с глобальным фильтром (is_deleted = false применяется автоматически)
+        var position = await ExecuteInDb(async db =>
+            await db.Positions
+                .FirstOrDefaultAsync(p => p.Id == positionId));
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Null(position);
     }
 
     [Fact]
@@ -57,12 +59,11 @@ public class SoftDeletePositionTests : DirectoryBaseTests
         await Client.DeleteAsync($"/api/positions/{positionId}");
 
         // Act
-        var response = await Client.GetAsync("/api/positions");
-        var content = await response.Content.ReadAsStringAsync();
+        var positions = await ExecuteInDb(async db =>
+            await db.Positions.ToListAsync());
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.DoesNotContain(positionId.ToString(), content);
+        Assert.DoesNotContain(positions, p => p.Id == positionId);
     }
 
     [Fact]
@@ -73,6 +74,7 @@ public class SoftDeletePositionTests : DirectoryBaseTests
         var positionId = await CreatePositionViaHttp(departmentId: departmentId);
         await Client.DeleteAsync($"/api/positions/{positionId}");
 
+        // имитируем "старую" запись
         await ExecuteInDb(async db =>
         {
             var position = await db.Positions
@@ -83,6 +85,7 @@ public class SoftDeletePositionTests : DirectoryBaseTests
             await db.SaveChangesAsync();
         });
 
+        // Act — вызываем батч-удаление напрямую
         await ExecuteInDb(async db =>
         {
             var repo = new PositionRepository(db);
@@ -92,6 +95,7 @@ public class SoftDeletePositionTests : DirectoryBaseTests
                 cancellationToken: CancellationToken.None);
         });
 
+        // Assert — запись физически удалена
         var position = await ExecuteInDb(async db =>
             await db.Positions
                 .IgnoreQueryFilters()

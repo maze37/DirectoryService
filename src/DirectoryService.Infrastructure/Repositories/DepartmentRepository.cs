@@ -51,14 +51,15 @@ public class DepartmentRepository : IDepartmentRepository
         try
         {
             var department = await _context.Departments
-                    .FromSqlRaw("""
-                                SELECT id, parent_id, depth, children_count, is_active, 
-                                       created_when, updated_when, name, slug, path, xmin
-                                FROM departments 
-                                WHERE id = {0} AND is_deleted = false
-                                FOR UPDATE
-                                """, departmentId)
-                    .FirstOrDefaultAsync(cancellationToken);
+                .FromSqlRaw("""
+                            SELECT id, parent_id, depth, children_count, is_active, is_deleted,
+                                   created_when, updated_when, deleted_when, name, slug, path, xmin
+                            FROM departments 
+                            WHERE id = {0} AND is_deleted = false
+                            FOR UPDATE
+                            """, departmentId)
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (department is null)
                 return Errors.General.NotFound(name: "department");
@@ -223,7 +224,7 @@ public class DepartmentRepository : IDepartmentRepository
     }
     
     public async Task<int> DeleteSoftDeletedBatchAsync(
-        DateTime olderThanUtc,
+        DateTimeOffset olderThanUtc,
         int batchSize,
         CancellationToken cancellationToken)
     {
@@ -239,6 +240,9 @@ public class DepartmentRepository : IDepartmentRepository
 
         var connection = _context.Database.GetDbConnection();
 
+        if (connection.State != System.Data.ConnectionState.Open)
+            await _context.Database.OpenConnectionAsync(cancellationToken);
+        
         var rowsAffected = await connection.ExecuteAsync(
             new CommandDefinition(
                 sql,

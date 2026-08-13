@@ -57,8 +57,7 @@ public class GetDepartmentsQueryHandler : IQueryHandler<GetDepartmentsQuery, Pag
         };
         
         var totalCount = await departmentsQuery.LongCountAsync(cancellationToken);
-
-        // Валидация пагинации
+        
         if (query.Request.Pagination.Page < 1)
         {
             throw new ValidationException("Номер страницы должен быть больше 0");

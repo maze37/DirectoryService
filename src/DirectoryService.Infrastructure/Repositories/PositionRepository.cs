@@ -49,11 +49,12 @@ public class PositionRepository : IPositionRepository
         {
             var position = await _context.Positions
                 .FromSqlRaw("""
-                            SELECT id, description, is_active, created_when, updated_when, name, xmin
+                            SELECT id, description, is_active, is_deleted, deleted_when, created_when, updated_when, name, xmin
                             FROM positions
                             WHERE id = {0} AND is_deleted = false
                             FOR UPDATE
                             """, positionId)
+                .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (position is null)
@@ -88,6 +89,9 @@ public class PositionRepository : IPositionRepository
                            """;
 
         var connection = _context.Database.GetDbConnection();
+        
+        if (connection.State != System.Data.ConnectionState.Open) 
+            await _context.Database.OpenConnectionAsync(cancellationToken);
 
         var rowsAffected = await connection.ExecuteAsync(
             new CommandDefinition(

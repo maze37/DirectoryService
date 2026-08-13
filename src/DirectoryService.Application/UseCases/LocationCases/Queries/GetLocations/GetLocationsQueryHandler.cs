@@ -44,6 +44,8 @@ public class GetLocationsQueryHandler : IQueryHandler<GetLocationsQuery, PagedRe
             conditions.Add("tdc.total_count >= @minDepartmentCount");
             parameters.Add("minDepartmentCount", query.Request.MinDepartmentCount.Value);
         }
+        
+        conditions.Add("l.is_deleted = false");
 
         var sortBy = query.Request.SortBy?.ToLower();
         var sortDir = query.Request.SortDir?.ToLower();
@@ -82,33 +84,32 @@ public class GetLocationsQueryHandler : IQueryHandler<GetLocationsQuery, PagedRe
         var whereClause = conditions.Count > 0 ? "WHERE " + string.Join(" AND ", conditions) : "";
 
         var sql = $"""
-                    WITH total_departments_count AS (
-                        SELECT 
-                            l.id as location_id,
-                            COUNT(dl.location_id) as total_count
-                        FROM locations l
-                        LEFT JOIN department_locations dl ON l.id = dl.location_id
-                        WHERE l.is_deleted = false
-                        GROUP BY l.id
-                    )
-                    SELECT
-                        l.name,
-                        l.created_when,
-                        tdc.total_count as department_count,
-                        l.address_country as Country,
-                        l.address_street as Street,
-                        l.address_city as City,
-                        l.address_office as Office,
-                        l.address_building as Building,
-                        l.address_postal_code as PostalCode,
-                        COUNT(*) OVER() as total_rows
-                    FROM locations l 
-                    LEFT JOIN total_departments_count tdc ON l.id = tdc.location_id
-                    WHERE l.is_deleted = false
-                    {whereClause}
-                    ORDER BY {orderByClause}
-                    LIMIT @page_size OFFSET @offset
-                    """;
+                   WITH total_departments_count AS (
+                       SELECT 
+                           l.id as location_id,
+                           COUNT(dl.location_id) as total_count
+                       FROM locations l
+                       LEFT JOIN department_locations dl ON l.id = dl.location_id
+                       WHERE l.is_deleted = false
+                       GROUP BY l.id
+                   )
+                   SELECT
+                       l.name,
+                       l.created_when,
+                       tdc.total_count as department_count,
+                       l.address_country as Country,
+                       l.address_street as Street,
+                       l.address_city as City,
+                       l.address_office as Office,
+                       l.address_building as Building,
+                       l.address_postal_code as PostalCode,
+                       COUNT(*) OVER() as total_rows
+                   FROM locations l 
+                   LEFT JOIN total_departments_count tdc ON l.id = tdc.location_id
+                   {whereClause}
+                   ORDER BY {orderByClause}
+                   LIMIT @page_size OFFSET @offset
+                   """;
 
         long? totalCount = null;
 

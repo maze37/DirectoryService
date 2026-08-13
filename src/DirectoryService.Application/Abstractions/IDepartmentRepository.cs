@@ -89,7 +89,7 @@ public interface IDepartmentRepository
     void RemovePositionLink(DepartmentPosition link);
     
     Task<int> DeleteSoftDeletedBatchAsync(
-        DateTime olderThanUtc,
+        DateTimeOffset olderThanUtc,
         int batchSize,
         CancellationToken cancellationToken);
 }
