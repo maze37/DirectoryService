@@ -43,13 +43,21 @@ public class DeleteDepartmentCommandHandler : ICommandHandler<DeleteDepartmentCo
         if (transactionResult.IsFailure)
             return transactionResult.Error;
 
-        using var transaction = transactionResult.Value;
+        using var transactionScope = transactionResult.Value;
 
         var departmentResult = await _departmentRepository.GetByIdWithLock(command.Id, cancellationToken);
         if (departmentResult.IsFailure)
         {
-            transaction.Rollback();
+            transactionScope.Rollback();
             return departmentResult.Error;
+        }
+
+        if (departmentResult.Value.ChildrenCount > 0) 
+        {
+            transactionScope.Rollback();
+            return Error.Validation(
+                "department.has.children", 
+                "Нельзя удалить подразделение, у которого есть дочерние элементы. Сначала удалите их.");
         }
         
         departmentResult.Value.SoftDelete(_dateTime.UtcNow);
@@ -57,11 +65,11 @@ public class DeleteDepartmentCommandHandler : ICommandHandler<DeleteDepartmentCo
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
         {
-            transaction.Rollback();
+            transactionScope.Rollback();
             return saveResult.Error;
         }
 
-        var commitResult = transaction.Commit();
+        var commitResult = transactionScope.Commit();
         if (commitResult.IsFailure)
             return commitResult.Error;
 
