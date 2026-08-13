@@ -53,6 +53,7 @@ public class PositionConfigurations : IEntityTypeConfiguration<Position>
         builder.Property(p => p.Version)
             .HasColumnName("xmin")
             .HasColumnType("xid")
-            .IsRowVersion();
+            .IsRowVersion()
+            .IsRequired();
     }
 }

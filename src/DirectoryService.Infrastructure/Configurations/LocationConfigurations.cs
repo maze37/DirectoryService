@@ -68,10 +68,11 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
         builder.HasMany(p => p.DepartmentLocations)
             .WithOne()
             .HasForeignKey(dl => dl.LocationId);
-        
+
         builder.Property(p => p.Version)
             .HasColumnName("xmin")
             .HasColumnType("xid")
-            .IsRowVersion();
+            .IsRowVersion()
+            .IsRequired();
     }
 }

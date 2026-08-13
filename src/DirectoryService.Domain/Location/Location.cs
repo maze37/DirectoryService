@@ -35,7 +35,7 @@ public sealed class Location : AggregateRoot
     /// <summary>
     /// Soft Delete.
     /// </summary>
-    public bool? IsDeleted { get; private set; }
+    public bool IsDeleted { get; private set; }
     
     /// <summary>
     /// Дата и время удаления.
@@ -65,7 +65,8 @@ public sealed class Location : AggregateRoot
         LocationName name,
         Address address,
         Timezone timezone,
-        DateTimeOffset createdWhen) : base(id)
+        DateTimeOffset createdWhen,
+        bool isDeleted) : base(id)
     {
         Name = name;
         Address = address;
@@ -73,6 +74,7 @@ public sealed class Location : AggregateRoot
         IsActive = true;
         CreatedWhen = createdWhen;
         UpdatedWhen = createdWhen;
+        IsDeleted = isDeleted;
     }
     
     public static Result<Location, Error> Create(
@@ -80,7 +82,8 @@ public sealed class Location : AggregateRoot
         string name,
         Address address,
         string timezone,
-        DateTimeOffset createdWhen)
+        DateTimeOffset createdWhen,
+        bool isDeleted = false)
     {
         if (id == Guid.Empty)
             return GeneralErrors.ValueIsInvalid("id","ID локации не может быть пустым.");
@@ -102,7 +105,8 @@ public sealed class Location : AggregateRoot
             nameResult.Value,
             addressResult.Value, 
             timezoneResult.Value,
-            createdWhen);
+            createdWhen,
+            isDeleted);
     }
     
     public void SoftDelete(DateTimeOffset deletedWhen)

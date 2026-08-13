@@ -3,6 +3,7 @@ using DirectoryService.Application.UseCases.DepartmentCases.Commands.CreateDepar
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.DeleteDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.DetachPositionFromDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.MoveDepartment;
+using DirectoryService.Application.UseCases.DepartmentCases.Commands.RestoreDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.UpdateDepartmentLocations;
 using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentById;
 using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartments;
@@ -25,6 +26,7 @@ public class DepartmentController : ControllerBase
     private readonly ICommandHandler<DeleteDepartmentCommand, DeleteDepartmentResponse> _deleteHandler;
     private readonly ICommandHandler<AttachPositionToDepartmentCommand, AttachPositionToDepartmentResponse> _attachPositionHandler;
     private readonly ICommandHandler<DetachPositionFromDepartmentCommand, DetachPositionFromDepartmentResponse> _detachPositionHandler;
+    private readonly ICommandHandler<RestoreDepartmentCommand, RestoreDepartmentResponse> _restoreHandler;
     private readonly IQueryHandler<GetDepartmentByIdQuery, GetDepartmentDto> _getByIdHandler;
     private readonly IQueryHandler<GetDepartmentsQuery, PagedResult<DepartmentListItemDto>> _getByFilterHandler;
     private readonly ILogger<DepartmentController> _logger;
@@ -36,6 +38,7 @@ public class DepartmentController : ControllerBase
         ICommandHandler<DeleteDepartmentCommand, DeleteDepartmentResponse> deleteHandler,
         ICommandHandler<AttachPositionToDepartmentCommand, AttachPositionToDepartmentResponse> attachPositionHandler,
         ICommandHandler<DetachPositionFromDepartmentCommand, DetachPositionFromDepartmentResponse> detachPositionHandler,
+        ICommandHandler<RestoreDepartmentCommand, RestoreDepartmentResponse> restoreHandler,
         IQueryHandler<GetDepartmentByIdQuery, GetDepartmentDto> getByIdHandler,
         IQueryHandler<GetDepartmentsQuery, PagedResult<DepartmentListItemDto>> getByFilterHandler,
         ILogger<DepartmentController> logger)
@@ -46,6 +49,7 @@ public class DepartmentController : ControllerBase
         _deleteHandler = deleteHandler;
         _attachPositionHandler = attachPositionHandler;
         _detachPositionHandler = detachPositionHandler;
+        _restoreHandler = restoreHandler;
         _getByIdHandler = getByIdHandler;
         _getByFilterHandler = getByFilterHandler;
         _logger = logger;
@@ -193,5 +197,22 @@ public class DepartmentController : ControllerBase
         
         _logger.LogInformation("Отделы получены успешно.");
         return Ok(Envelope.Ok(result));
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateAsync(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RestoreDepartmentCommand(id);
+
+        var result = await _restoreHandler.HandleAsync(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return result.Error.ToResponse();
+        }
+
+        return Ok(Envelope.Ok(result.Value));
     }
 }

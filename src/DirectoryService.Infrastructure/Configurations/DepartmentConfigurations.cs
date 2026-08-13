@@ -81,8 +81,11 @@ public class DepartmentConfigurations : IEntityTypeConfiguration<Department>
             .IsRequired(false)
             .HasForeignKey(d => d.ParentId)
             .OnDelete(DeleteBehavior.Restrict);
-        
-        builder.Property(d => d.Version)
-            .IsRowVersion();
+
+        builder.Property(p => p.Version)
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .IsRowVersion()
+            .IsRequired();
     }
 }
