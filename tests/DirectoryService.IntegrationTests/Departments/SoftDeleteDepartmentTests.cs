@@ -2,6 +2,7 @@
 using DirectoryService.IntegrationTests.Infrastructure;
 using DirectoryService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Renci.SshNet.Sftp;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
@@ -97,5 +98,28 @@ public class SoftDeleteDepartmentTests : DirectoryBaseTests
                 .FirstOrDefaultAsync(d => d.Id == departmentId));
 
         Assert.Null(department);
+    }
+
+    [Fact]
+    public async Task RestoreSoftDeletedDepartment_ShouldRestoreIt()
+    {
+        // Arrange
+        var departmentId = await CreateDepartmentViaHttp(slug: "OFFICE");
+        await Client.DeleteAsync($"/api/departments/{departmentId}");
+        
+        // Act
+        var response = await Client.PutAsync($"/api/departments/{departmentId}/restore", null);
+
+        // Assert HTTP
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        
+        // Assert DB
+        var department = await ExecuteInDb(async db =>
+            await db.Departments
+                .FirstOrDefaultAsync(d => d.Id == departmentId));
+        
+        Assert.NotNull(department);
+        Assert.False(department.IsDeleted);
+        Assert.Null(department.DeletedWhen);
     }
 }

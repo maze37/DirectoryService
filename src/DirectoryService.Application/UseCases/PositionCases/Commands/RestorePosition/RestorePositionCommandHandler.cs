@@ -45,7 +45,7 @@ public class RestorePositionCommandHandler : ICommandHandler<RestorePositionComm
         
         using var transactionScope = transactionScopeResult.Value;
         
-        var positionResult = await _positionRepository.GetByIdWithLock(command.PositionId, cancellationToken);
+        var positionResult = await _positionRepository.GetDeletedByIdWithLock(command.PositionId, cancellationToken);
         if (positionResult.IsFailure)
         {
             transactionScope.Rollback();

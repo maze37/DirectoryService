@@ -98,4 +98,27 @@ public class SoftDeleteLocationTests : DirectoryBaseTests
 
         Assert.Null(location);
     }
+
+    [Fact]
+    public async Task RestoreSoftDeletedDepartment_ShouldRestoreIt()
+    {
+        // Arrange
+        var locationId = await CreateLocationViaHttp("TEST");
+        await Client.DeleteAsync($"/api/locations/{locationId}");
+        
+        // Act
+        var response = await Client.PutAsync($"/api/locations/{locationId}/restore", null);
+        
+        // Assert HTTP
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        // Assert Db
+        var location = await ExecuteInDb(async db =>
+            await db.Locations
+                .FirstOrDefaultAsync(l => l.Id == locationId));
+        
+        Assert.NotNull(location);
+        Assert.False(location.IsDeleted);
+        Assert.Null(location.DeletedWhen);
+    }
 }

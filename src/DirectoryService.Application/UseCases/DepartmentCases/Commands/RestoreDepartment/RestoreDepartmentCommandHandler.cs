@@ -45,7 +45,7 @@ public class RestoreDepartmentCommandHandler : ICommandHandler<RestoreDepartment
         
         using var transactionScope = transactionScopeResult.Value;
         
-        var departmentResult = await _departmentRepository.GetByIdWithLock(command.DepartmentId, cancellationToken);
+        var departmentResult = await _departmentRepository.GetDeletedByIdWithLock(command.DepartmentId, cancellationToken);
         if (departmentResult.IsFailure)
         {
             transactionScope.Rollback();

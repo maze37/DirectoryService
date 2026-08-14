@@ -85,8 +85,8 @@ public class PositionController : ControllerBase
         return Ok(Envelope.Ok(result.Value));
     }
     
-    [HttpPut]
-    public async Task<IActionResult> UpdateAsync(
+    [HttpPut("{id:guid}/restore")]
+    public async Task<IActionResult> RestoreAsync(
         [FromRoute] Guid id,
         CancellationToken cancellationToken = default)
     {

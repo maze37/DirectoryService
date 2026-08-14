@@ -199,8 +199,8 @@ public class DepartmentController : ControllerBase
         return Ok(Envelope.Ok(result));
     }
 
-    [HttpPut]
-    public async Task<IActionResult> UpdateAsync(
+    [HttpPut("{id:guid}/restore")]
+    public async Task<IActionResult> RestoreAsync(
         [FromRoute] Guid id,
         CancellationToken cancellationToken = default)
     {

@@ -37,4 +37,8 @@ public interface ILocationRepository
         DateTimeOffset olderThanUtc,
         int batchSize,
         CancellationToken cancellationToken);
+
+    Task<Result<Location, Error>> GetDeletedByIdWithLock(
+        Guid locationsId,
+        CancellationToken cancellationToken = default);
 }

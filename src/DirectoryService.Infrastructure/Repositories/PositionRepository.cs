@@ -127,4 +127,26 @@ public class PositionRepository : IPositionRepository
         return rowsAffected;
     }
     */
+    
+    public async Task<Result<Position, Error>> GetDeletedByIdWithLock(
+        Guid positionId,
+        CancellationToken cancellationToken = default)
+    {
+        const string sql = "SELECT 1 FROM positions WHERE id = @id FOR UPDATE;";
+        
+        await _context.Database.GetDbConnection()
+            .ExecuteAsync(new CommandDefinition(
+                sql, 
+                new { Id = positionId }, 
+                cancellationToken: cancellationToken));
+
+        var position = await _context.Positions
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.Id == positionId, cancellationToken);
+
+        if (position is null)
+            return Error.NotFound("position.not.found", $"Должность с ID {positionId} не найдено");
+
+        return position;
+    }
 }

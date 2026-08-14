@@ -45,7 +45,7 @@ public class RestoreLocationCommandHandler : ICommandHandler<RestoreLocationComm
         
         using var transactionScope = transactionScopeResult.Value;
         
-        var locationResult = await _locationRepository.GetByIdWithLock(command.LocationId, cancellationToken);
+        var locationResult = await _locationRepository.GetDeletedByIdWithLock(command.LocationId, cancellationToken);
         if (locationResult.IsFailure)
         {
             transactionScope.Rollback();

@@ -92,4 +92,8 @@ public interface IDepartmentRepository
         DateTimeOffset olderThanUtc,
         int batchSize,
         CancellationToken cancellationToken);
+    
+    Task<Result<Department, Error>> GetDeletedByIdWithLock(
+        Guid departmentId, 
+        CancellationToken cancellationToken = default);
 }

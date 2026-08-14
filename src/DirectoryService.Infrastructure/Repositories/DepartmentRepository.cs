@@ -277,4 +277,26 @@ public class DepartmentRepository : IDepartmentRepository
         return rowsAffected;
     }
     */
+
+    public async Task<Result<Department, Error>> GetDeletedByIdWithLock(
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+    {
+        const string sql = "SELECT 1 FROM departments WHERE id = @id FOR UPDATE;";
+        
+        await _context.Database.GetDbConnection()
+            .ExecuteAsync(new CommandDefinition(
+                sql, 
+                new { Id = departmentId }, 
+                cancellationToken: cancellationToken));
+
+        var department = await _context.Departments
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.Id == departmentId, cancellationToken);
+
+        if (department is null)
+            return Error.NotFound("department.not.found", $"Подразделение с ID {departmentId} не найдено");
+
+        return department;
+    }
 }

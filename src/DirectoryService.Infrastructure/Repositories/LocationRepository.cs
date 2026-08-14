@@ -125,4 +125,26 @@ public class LocationRepository : ILocationRepository
         return rowsAffected;
     }
     */
+    
+    public async Task<Result<Location, Error>> GetDeletedByIdWithLock(
+        Guid locationsId,
+        CancellationToken cancellationToken = default)
+    {
+        const string sql = "SELECT 1 FROM locations WHERE id = @id FOR UPDATE;";
+        
+        await _context.Database.GetDbConnection()
+            .ExecuteAsync(new CommandDefinition(
+                sql, 
+                new { Id = locationsId }, 
+                cancellationToken: cancellationToken));
+
+        var location = await _context.Locations
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.Id == locationsId, cancellationToken);
+
+        if (location is null)
+            return Error.NotFound("location.not.found", $"Локация с ID {locationsId} не найдено");
+
+        return location;
+    }
 }
