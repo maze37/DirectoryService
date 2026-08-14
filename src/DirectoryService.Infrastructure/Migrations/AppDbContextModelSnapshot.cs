@@ -39,6 +39,10 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_when");
 
+                    b.Property<DateTimeOffset?>("DeletedWhen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_when");
+
                     b.Property<string>("DepartmentName")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -52,6 +56,12 @@ namespace DirectoryService.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
 
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uuid")
@@ -158,9 +168,19 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_when");
 
+                    b.Property<DateTimeOffset?>("DeletedWhen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_when");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -238,6 +258,10 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_when");
 
+                    b.Property<DateTimeOffset?>("DeletedWhen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_when");
+
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")
@@ -246,6 +270,12 @@ namespace DirectoryService.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Name")
                         .IsRequired()

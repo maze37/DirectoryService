@@ -15,17 +15,20 @@ public class DeletePositionCommandHandler : ICommandHandler<DeletePositionComman
     private readonly ITransactionManager _transactionManager;
     private readonly IValidator<DeletePositionCommand> _validator;
     private readonly ILogger<DeletePositionCommandHandler> _logger;
+    private readonly IDateTimeProvider _dateTime;
 
     public DeletePositionCommandHandler(
         IPositionRepository positionRepository,
         ITransactionManager transactionManager,
         IValidator<DeletePositionCommand> validator,
-        ILogger<DeletePositionCommandHandler> logger)
+        ILogger<DeletePositionCommandHandler> logger,
+        IDateTimeProvider dateTime)
     {
         _positionRepository = positionRepository;
         _transactionManager = transactionManager;
         _validator = validator;
         _logger = logger;
+        _dateTime = dateTime;
     }
 
     public async Task<Result<DeletePositionResponse, Error>> HandleAsync(
@@ -34,15 +37,11 @@ public class DeletePositionCommandHandler : ICommandHandler<DeletePositionComman
     {
         var validationResult = await _validator.ValidateAsync(command, cancellationToken);
         if (!validationResult.IsValid)
-        {
             return validationResult.ToError();
-        }
 
         var transactionResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transactionResult.IsFailure)
-        {
             return transactionResult.Error;
-        }
 
         using var transaction = transactionResult.Value;
 
@@ -53,11 +52,11 @@ public class DeletePositionCommandHandler : ICommandHandler<DeletePositionComman
             return positionResult.Error;
         }
         
-        var hasLinks = await _positionRepository.HasDepartmentLinksAsync(command.Id, cancellationToken);
-        if (hasLinks)
-            return Error.Conflict("position.has.links", "Должность привязана к подразделениям. Сначала отвяжите её.");
-        
-        _positionRepository.Remove(positionResult.Value);
+        // var hasLinks = await _positionRepository.HasDepartmentLinksAsync(command.Id, cancellationToken);
+        // if (hasLinks)
+        //    return Error.Conflict("position.has.links", "Должность привязана к подразделениям. Сначала отвяжите её.");
+
+        positionResult.Value.SoftDelete(_dateTime.UtcNow);
         
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)

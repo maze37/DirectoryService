@@ -38,4 +38,13 @@ public interface IPositionRepository
     /// </summary>
     /// <param name="position"></param>
     void Update(Position position);
+    
+    Task<int> DeleteSoftDeletedBatchAsync(
+        DateTime olderThanUtc,
+        int batchSize,
+        CancellationToken cancellationToken);
+
+    Task<Result<Position, Error>> GetDeletedByIdWithLock(
+        Guid positionId,
+        CancellationToken cancellationToken = default);
 }

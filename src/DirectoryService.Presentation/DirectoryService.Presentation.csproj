@@ -22,6 +22,7 @@
     <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.7" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" VersionOverride="2.7.5" />
   </ItemGroup>
 
   <ItemGroup>

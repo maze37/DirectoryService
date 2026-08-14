@@ -12,11 +12,44 @@ namespace DirectoryService.Domain.Location;
 /// </summary>
 public sealed class Location : AggregateRoot
 {
+    /// <summary>
+    /// Название локации.
+    /// </summary>
     public LocationName Name { get; private set; } = null!;
+    
+    /// <summary>
+    /// Адрес локации.
+    /// </summary>
     public Address Address { get; private set; } = null!;
+    
+    /// <summary>
+    /// Временная зона в IANA формате.
+    /// </summary>
     public Timezone Timezone { get; private set; } = null!;
+    
+    /// <summary>
+    /// Активна ли локация (флаг).
+    /// </summary>
     public bool IsActive { get; private set; }
+    
+    /// <summary>
+    /// Soft Delete.
+    /// </summary>
+    public bool IsDeleted { get; private set; }
+    
+    /// <summary>
+    /// Дата и время удаления.
+    /// </summary>
+    public DateTimeOffset? DeletedWhen { get; private set; }
+    
+    /// <summary>
+    /// Дата и время создания.
+    /// </summary>
     public DateTimeOffset CreatedWhen { get; private set; }
+    
+    /// <summary>
+    /// Дата и время обновления.
+    /// </summary>
     public DateTimeOffset UpdatedWhen { get; private set; }
     
     /// <summary>
@@ -32,7 +65,8 @@ public sealed class Location : AggregateRoot
         LocationName name,
         Address address,
         Timezone timezone,
-        DateTimeOffset createdWhen) : base(id)
+        DateTimeOffset createdWhen,
+        bool isDeleted) : base(id)
     {
         Name = name;
         Address = address;
@@ -40,6 +74,7 @@ public sealed class Location : AggregateRoot
         IsActive = true;
         CreatedWhen = createdWhen;
         UpdatedWhen = createdWhen;
+        IsDeleted = isDeleted;
     }
     
     public static Result<Location, Error> Create(
@@ -47,7 +82,8 @@ public sealed class Location : AggregateRoot
         string name,
         Address address,
         string timezone,
-        DateTimeOffset createdWhen)
+        DateTimeOffset createdWhen,
+        bool isDeleted = false)
     {
         if (id == Guid.Empty)
             return GeneralErrors.ValueIsInvalid("id","ID локации не может быть пустым.");
@@ -69,6 +105,21 @@ public sealed class Location : AggregateRoot
             nameResult.Value,
             addressResult.Value, 
             timezoneResult.Value,
-            createdWhen);
+            createdWhen,
+            isDeleted);
     }
+    
+    public void SoftDelete(DateTimeOffset deletedWhen)
+    {
+        IsDeleted = true;
+        DeletedWhen = deletedWhen;
+    }
+    
+    public void Restore()
+    {
+        IsDeleted = false;
+        DeletedWhen = null;
+    }
+    
+    public void SetDeletedWhenForTest(DateTimeOffset value) => DeletedWhen = value;
 }

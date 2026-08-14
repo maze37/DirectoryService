@@ -1,5 +1,6 @@
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
+using DirectoryService.Infrastructure.BackgroundServices.Cleanup;
 using DirectoryService.Infrastructure.Database;
 using DirectoryService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,10 @@ public static class Inject
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
+        
+        services.AddHostedService<CleanupDepartmentsService>();
+        services.AddHostedService<CleanupLocationsService>();
+        services.AddHostedService<CleanupPositionsService>();
         
         return services;
     }

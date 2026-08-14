@@ -87,4 +87,13 @@ public interface IDepartmentRepository
     void AddPositionLink(DepartmentPosition link);
     
     void RemovePositionLink(DepartmentPosition link);
+    
+    Task<int> DeleteSoftDeletedBatchAsync(
+        DateTimeOffset olderThanUtc,
+        int batchSize,
+        CancellationToken cancellationToken);
+    
+    Task<Result<Department, Error>> GetDeletedByIdWithLock(
+        Guid departmentId, 
+        CancellationToken cancellationToken = default);
 }

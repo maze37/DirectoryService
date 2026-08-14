@@ -62,14 +62,17 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
         builder.Property(l => l.IsActive).HasColumnName("is_active").IsRequired();
         builder.Property(l => l.CreatedWhen).HasColumnName("created_when").IsRequired();
         builder.Property(l => l.UpdatedWhen).HasColumnName("updated_when").IsRequired();
+        builder.Property(d => d.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false).IsRequired();
+        builder.Property(d => d.DeletedWhen).HasColumnName("deleted_when").IsRequired(false);
         
         builder.HasMany(p => p.DepartmentLocations)
             .WithOne()
             .HasForeignKey(dl => dl.LocationId);
-        
+
         builder.Property(p => p.Version)
             .HasColumnName("xmin")
             .HasColumnType("xid")
-            .IsRowVersion();
+            .IsRowVersion()
+            .IsRequired();
     }
 }

@@ -9,14 +9,26 @@ public class DeleteLocationsTests : DirectoryBaseTests
     public DeleteLocationsTests(DirectoryTestWebFactory factory) : base(factory) { }
     
     [Fact]
-    public async Task DeleteLocation_WithLinkedDepartments_Returns409()
+    public async Task DeleteLocation_WithLinkedDepartments_SoftDeletes_Returns200()
     {
-        var locationId = await CreateLocationViaHttp("Офис");
-        await CreateDepartmentViaHttp(slug: "latintest", locationId: locationId);
+        // Arrange
+        var locationId = await CreateLocationViaHttp();
+        await CreateDepartmentViaHttp("test", locationId: locationId);
 
+        // Act
         var response = await Client.DeleteAsync($"/api/locations/{locationId}");
 
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        // Assert — теперь soft delete разрешён даже при наличии связей
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        // связь в БД осталась, но локация помечена удалённой
+        var location = await ExecuteInDb(async db =>
+            await db.Locations
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(l => l.Id == locationId));
+
+        Assert.NotNull(location);
+        Assert.True(location.IsDeleted);
     }
 
     [Fact]

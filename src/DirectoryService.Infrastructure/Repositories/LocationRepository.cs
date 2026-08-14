@@ -32,18 +32,18 @@ public class LocationRepository : ILocationRepository
         return existingCount == locationIds.Count;
     }
 
-    public async Task<Result<Location, Error>> GetByIdWithLock(Guid id, CancellationToken cancellationToken)
+    public async Task<Result<Location, Error>> GetByIdWithLock(
+        Guid id, 
+        CancellationToken cancellationToken)
     {
         try
         {
-            // 1. Блокируем строку через Dapper
             var dbConn = _context.Database.GetDbConnection();
             await dbConn.ExecuteAsync(new CommandDefinition(
-                "SELECT 1 FROM locations WHERE id = @id FOR UPDATE",
+                "SELECT 1 FROM locations WHERE id = @id AND is_deleted = false FOR UPDATE",
                 new { id },
                 cancellationToken: cancellationToken));
 
-            // 2. Загружаем через EF Core — работает с ComplexProperty
             var location = await _context.Locations
                 .FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
 
@@ -69,5 +69,82 @@ public class LocationRepository : ILocationRepository
     public void Remove(Location location)
     {
         _context.Locations.Remove(location);
+    }
+    
+    public async Task<int> DeleteSoftDeletedBatchAsync(
+        DateTimeOffset olderThanUtc,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           DELETE FROM locations
+                           WHERE id IN (
+                               SELECT id FROM locations
+                               WHERE is_deleted = true AND deleted_when < @OlderThanUtc
+                               ORDER BY deleted_when
+                               LIMIT @BatchSize
+                           )
+                           """;
+
+        var connection = _context.Database.GetDbConnection();
+        
+        if (connection.State != System.Data.ConnectionState.Open)
+            await _context.Database.OpenConnectionAsync(cancellationToken);
+
+        var rowsAffected = await connection.ExecuteAsync(
+            new CommandDefinition(
+                sql,
+                new { OlderThanUtc = olderThanUtc, BatchSize = batchSize },
+                cancellationToken: cancellationToken));
+
+        return rowsAffected;
+    }
+    
+    /*
+    public async Task<int> DeleteSoftDeletedBatchAsync(
+        DateTime olderThanUtc,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        var idsToDelete = await _context.Locations
+            .IgnoreQueryFilters() // иначе глобальный фильтр is_deleted=false скроет сами кандидаты на удаление
+            .Where(d => d.IsDeleted && d.DeletedWhen < olderThanUtc)
+            .OrderBy(d => d.DeletedAt)
+            .Take(batchSize)
+            .Select(d => d.Id)
+            .ToListAsync(cancellationToken);
+
+        if (idsToDelete.Count == 0)
+            return 0;
+
+        var rowsAffected = await _context.Locations
+            .IgnoreQueryFilters()
+            .Where(d => idsToDelete.Contains(d.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+
+        return rowsAffected;
+    }
+    */
+    
+    public async Task<Result<Location, Error>> GetDeletedByIdWithLock(
+        Guid locationsId,
+        CancellationToken cancellationToken = default)
+    {
+        const string sql = "SELECT 1 FROM locations WHERE id = @id FOR UPDATE;";
+        
+        await _context.Database.GetDbConnection()
+            .ExecuteAsync(new CommandDefinition(
+                sql, 
+                new { Id = locationsId }, 
+                cancellationToken: cancellationToken));
+
+        var location = await _context.Locations
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.Id == locationsId, cancellationToken);
+
+        if (location is null)
+            return Error.NotFound("location.not.found", $"Локация с ID {locationsId} не найдено");
+
+        return location;
     }
 }

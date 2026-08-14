@@ -1,12 +1,12 @@
 using DirectoryService.Application.UseCases.PositionCases.Commands.CreatePosition;
 using DirectoryService.Application.UseCases.PositionCases.Commands.DeletePosition;
 using DirectoryService.Application.UseCases.PositionCases.Commands.RenamePosition;
+using DirectoryService.Application.UseCases.PositionCases.Commands.RestorePosition;
 using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Core;
 using Shared.Result;
-using ILogger = Serilog.ILogger;
 
 namespace DirectoryService.Presentation.Controllers;
 
@@ -17,17 +17,20 @@ public class PositionController : ControllerBase
     private readonly ICommandHandler<CreatePositionCommand, CreatePositionResponse> _createHandler;
     private readonly ICommandHandler<RenamePositionCommand, RenamePositionResponse> _renameHandler;
     private readonly ICommandHandler<DeletePositionCommand, DeletePositionResponse> _deleteHandler;
+    private readonly ICommandHandler<RestorePositionCommand, RestorePositionResponse> _restoreHandler;
     private readonly ILogger<PositionController> _logger;
 
     public PositionController(
         ICommandHandler<CreatePositionCommand, CreatePositionResponse> createHandler,
         ICommandHandler<RenamePositionCommand, RenamePositionResponse> renameHandler,
         ICommandHandler<DeletePositionCommand, DeletePositionResponse> deleteHandler,
+        ICommandHandler<RestorePositionCommand, RestorePositionResponse> restoreHandler,
         ILogger<PositionController> logger)
     {
         _createHandler = createHandler;
         _renameHandler = renameHandler;
         _deleteHandler = deleteHandler;
+        _restoreHandler = restoreHandler;
         _logger = logger;
     }
 
@@ -74,6 +77,23 @@ public class PositionController : ControllerBase
         var command = new DeletePositionCommand(id);
 
         var result = await _deleteHandler.HandleAsync(command, cancellationToken);
+        if (result.IsFailure)
+        {
+            return result.Error.ToResponse();
+        }
+
+        return Ok(Envelope.Ok(result.Value));
+    }
+    
+    [HttpPut("{id:guid}/restore")]
+    public async Task<IActionResult> RestoreAsync(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RestorePositionCommand(id);
+
+        var result = await _restoreHandler.HandleAsync(command, cancellationToken);
+
         if (result.IsFailure)
         {
             return result.Error.ToResponse();

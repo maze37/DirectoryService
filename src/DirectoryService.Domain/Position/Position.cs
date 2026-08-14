@@ -23,10 +23,19 @@ public sealed class Position : AggregateRoot
     public string? Description { get; private set; }
     
     /// <summary>
-    /// Флаг активности должности (soft delete).
-    /// false - должность помечена как удаленная
+    /// Флаг активности должности.
     /// </summary>
     public bool IsActive { get; private set; }
+    
+    /// <summary>
+    /// Soft Delete.
+    /// </summary>
+    public bool? IsDeleted { get; private set; }
+    
+    /// <summary>
+    /// Дата и время удаления.
+    /// </summary>
+    public DateTimeOffset? DeletedWhen { get; private set; }
     
     /// <summary>
     /// Дата и время создания записи в UTC.
@@ -95,4 +104,18 @@ public sealed class Position : AggregateRoot
         Name = newName;
         UpdatedWhen = dateTime;
     }
+
+    public void SoftDelete(DateTimeOffset deletedWhen)
+    {
+        IsDeleted = true;
+        DeletedWhen = deletedWhen;
+    }
+    
+    public void Restore()
+    {
+        IsDeleted = false;
+        DeletedWhen = null;
+    }
+    
+    public void SetDeletedWhenForTest(DateTimeOffset value) => DeletedWhen = value;
 }

@@ -5,7 +5,6 @@ using DirectoryService.Domain.Department;
 using Microsoft.EntityFrameworkCore;
 using Shared.Result;
 using Dapper;
-using DirectoryService.Domain.Department.ValueObjects;
 using DirectoryService.Domain.DepartmentPositions;
 using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
@@ -52,14 +51,15 @@ public class DepartmentRepository : IDepartmentRepository
         try
         {
             var department = await _context.Departments
-                    .FromSqlRaw("""
-                                SELECT id, parent_id, depth, children_count, is_active, 
-                                       created_when, updated_when, name, slug, path, xmin
-                                FROM departments 
-                                WHERE id = {0} 
-                                FOR UPDATE
-                                """, departmentId)
-                    .FirstOrDefaultAsync(cancellationToken);
+                .FromSqlRaw("""
+                            SELECT id, parent_id, depth, children_count, is_active, is_deleted,
+                                   created_when, updated_when, deleted_when, name, slug, path, xmin
+                            FROM departments 
+                            WHERE id = {0} AND is_deleted = false
+                            FOR UPDATE
+                            """, departmentId)
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (department is null)
                 return Errors.General.NotFound(name: "department");
@@ -97,10 +97,9 @@ public class DepartmentRepository : IDepartmentRepository
 
     public async Task<bool> ExistsBySlugWithLockAsync(string slug, CancellationToken cancellationToken)
     {
-        const string sql = "SELECT 1 FROM departments WHERE slug = @slug FOR UPDATE";
+        const string sql = "SELECT 1 FROM departments WHERE slug = @slug AND is_deleted = false FOR UPDATE";
     
         var dbConn = _context.Database.GetDbConnection();
-        // Здесь важно: если _context в транзакции, то dbConn тоже в ней
         var result = await dbConn.ExecuteScalarAsync<int?>(
             new CommandDefinition(sql, new { slug }, cancellationToken: cancellationToken));
     
@@ -120,9 +119,6 @@ public class DepartmentRepository : IDepartmentRepository
         await _context.DepartmentLocations.AddRangeAsync(department.Locations, cancellationToken);
     }
 
-    /// <summary>
-    /// Вернет false, если не потомок и не сам department.
-    /// </summary>
     public async Task<bool> IsDescendantOrSelfAsync(
         Path potentialParentPath,
         Path departmentPath, 
@@ -136,7 +132,6 @@ public class DepartmentRepository : IDepartmentRepository
                                  """;
         
         var dbConn = _context.Database.GetDbConnection();
-        // для одного значения (bool) в даппере можно юзать ExecuteScalarAsync
         var result = await dbConn.ExecuteScalarAsync<bool>(dapperSql, new
         {
             potentialParentPath = potentialParentPath.Value,
@@ -149,7 +144,7 @@ public class DepartmentRepository : IDepartmentRepository
     {
         const string dapperSql = """
                                     SELECT 1 FROM departments
-                                    WHERE path <@ @oldPath::ltree
+                                    WHERE path <@ @oldPath::ltree AND is_deleted = false
                                     FOR UPDATE
                                  """;
 
@@ -176,7 +171,7 @@ public class DepartmentRepository : IDepartmentRepository
                                         WHEN id = @departmentId THEN @newParentId
                                         ELSE parent_id
                                         END
-                                 WHERE path <@ @oldPath::ltree
+                                 WHERE path <@ @oldPath::ltree AND is_deleted = false
                                  """;
 
         var dbConn = _context.Database.GetDbConnection();
@@ -218,7 +213,6 @@ public class DepartmentRepository : IDepartmentRepository
         }
     }
     
-
     public void AddPositionLink(DepartmentPosition link)
     {
         _context.DepartmentPositions.Add(link);
@@ -227,5 +221,82 @@ public class DepartmentRepository : IDepartmentRepository
     public void RemovePositionLink(DepartmentPosition link)
     {
         _context.DepartmentPositions.Remove(link);
+    }
+    
+    public async Task<int> DeleteSoftDeletedBatchAsync(
+        DateTimeOffset olderThanUtc,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           DELETE FROM departments
+                           WHERE id IN (
+                               SELECT id FROM departments
+                               WHERE is_deleted = true AND deleted_when < @OlderThanUtc
+                               ORDER BY deleted_when
+                               LIMIT @BatchSize
+                           )
+                           """;
+
+        var connection = _context.Database.GetDbConnection();
+
+        if (connection.State != System.Data.ConnectionState.Open)
+            await _context.Database.OpenConnectionAsync(cancellationToken);
+        
+        var rowsAffected = await connection.ExecuteAsync(
+            new CommandDefinition(
+                sql,
+                new { OlderThanUtc = olderThanUtc, BatchSize = batchSize },
+                cancellationToken: cancellationToken));
+
+        return rowsAffected;
+    }
+    
+    /*
+    public async Task<int> DeleteSoftDeletedBatchAsync(
+        DateTime olderThanUtc,
+        int batchSize,
+        CancellationToken cancellationToken)
+    {
+        var idsToDelete = await _context.Departments
+            .IgnoreQueryFilters() // иначе глобальный фильтр is_deleted=false скроет сами кандидаты на удаление
+            .Where(d => d.IsDeleted && d.DeletedWhen < olderThanUtc)
+            .OrderBy(d => d.DeletedAt)
+            .Take(batchSize)
+            .Select(d => d.Id)
+            .ToListAsync(cancellationToken);
+
+        if (idsToDelete.Count == 0)
+            return 0;
+
+        var rowsAffected = await _context.Departments
+            .IgnoreQueryFilters()
+            .Where(d => idsToDelete.Contains(d.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+
+        return rowsAffected;
+    }
+    */
+
+    public async Task<Result<Department, Error>> GetDeletedByIdWithLock(
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+    {
+        const string sql = "SELECT 1 FROM departments WHERE id = @id FOR UPDATE;";
+        
+        await _context.Database.GetDbConnection()
+            .ExecuteAsync(new CommandDefinition(
+                sql, 
+                new { Id = departmentId }, 
+                cancellationToken: cancellationToken));
+
+        var department = await _context.Departments
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.Id == departmentId, cancellationToken);
+
+        if (department is null)
+            return Error.NotFound("department.not.found", $"Подразделение с ID {departmentId} не найдено");
+
+        return department;
     }
 }

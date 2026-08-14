@@ -2,8 +2,10 @@
 
 namespace DirectoryService.Contracts.DepartmentContracts;
 
-public record GetDepartmentsRequest(
-    string? Search,
-    string? SortBy,
-    string? SortDir,
-    PaginationRequest Pagination);
+public class GetDepartmentsRequest
+{
+    public string? Search { get; init; }
+    public string? SortBy { get; init; }
+    public string? SortDir { get; init; }
+    public PaginationRequest Pagination { get; init; } = new(1, 10);
+}

@@ -1,16 +1,18 @@
 ﻿using System.Runtime.CompilerServices;
 using DirectoryService.Application.UseCases.LocationCases.Commands.CreateLocation;
 using DirectoryService.Application.UseCases.LocationCases.Commands.DeleteLocation;
+using DirectoryService.Application.UseCases.LocationCases.Commands.RestoreLocation;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetLocationById;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetLocations;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetTopLocations;
+using DirectoryService.Application.UseCases.PositionCases.Commands.RestorePosition;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
+using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Core;
 using Shared.Result;
-using ILogger = Serilog.ILogger;
 
 namespace DirectoryService.Presentation.Controllers;
 
@@ -20,6 +22,7 @@ public class LocationController : ControllerBase
 {
     private readonly ICommandHandler<CreateLocationCommand, CreateLocationResponse> _createHandler;
     private readonly ICommandHandler<DeleteLocationCommand, DeleteLocationResponse> _deleteHandler;
+    private readonly ICommandHandler<RestoreLocationCommand, RestoreLocationResponse> _restoreHandler;
     private readonly IQueryHandler<GetLocationByIdQuery, GetLocationDto> _getByIdHandler;
     private readonly IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>> _getTopHandler;
     private readonly IQueryHandler<GetLocationsQuery, PagedResult<LocationListItemDto>> _getLocationsHandler;
@@ -28,6 +31,7 @@ public class LocationController : ControllerBase
     public LocationController(
         ICommandHandler<CreateLocationCommand, CreateLocationResponse> createHandler,
         ICommandHandler<DeleteLocationCommand, DeleteLocationResponse> deleteHandler,
+        ICommandHandler<RestoreLocationCommand, RestoreLocationResponse> restoreHandler,
         IQueryHandler<GetLocationByIdQuery, GetLocationDto> getByIdHandler,
         IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>> getTopHandler,
         IQueryHandler<GetLocationsQuery, PagedResult<LocationListItemDto>> getLocationsHandler,
@@ -35,6 +39,7 @@ public class LocationController : ControllerBase
     {
         _createHandler = createHandler;
         _deleteHandler = deleteHandler;
+        _restoreHandler = restoreHandler;
         _getByIdHandler = getByIdHandler;
         _getTopHandler = getTopHandler;
         _getLocationsHandler = getLocationsHandler;
@@ -124,5 +129,22 @@ public class LocationController : ControllerBase
         var result = await _getLocationsHandler.HandleAsync(query, cancellationToken);
         
         return Ok(Envelope.Ok(result));
+    }
+    
+    [HttpPut("{id:guid}/restore")]
+    public async Task<IActionResult> RestoreAsync(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new RestoreLocationCommand(id);
+
+        var result = await _restoreHandler.HandleAsync(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return result.Error.ToResponse();
+        }
+
+        return Ok(Envelope.Ok(result.Value));
     }
 }
