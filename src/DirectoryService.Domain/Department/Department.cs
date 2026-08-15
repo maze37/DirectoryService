@@ -32,7 +32,7 @@ public sealed class Department : AggregateRoot
     public Slug Slug { get; private set; } = null!;
     
     /// <summary>
-    /// FK → Department.Id; null — корень.
+    /// FK - Department.Id; null — корень.
     /// </summary>
     public Guid? ParentId { get; private set; }
     
@@ -64,7 +64,7 @@ public sealed class Department : AggregateRoot
     /// <summary>
     /// Soft Delete.
     /// </summary>
-    public bool? IsDeleted { get; private set; }
+    public bool IsDeleted { get; private set; }
     
     /// <summary>
     /// Дата и время удаления.

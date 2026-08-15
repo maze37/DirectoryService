@@ -6,6 +6,8 @@ public class GetDepartmentByIdValidator : AbstractValidator<GetDepartmentByIdQue
 {
     public GetDepartmentByIdValidator()
     {
-        RuleFor(x => x.Id).NotNull();
+        RuleFor(x => x.Id)
+            .NotNull()
+            .WithMessage("Айди отдела не может быть пустым");
     }
 }
