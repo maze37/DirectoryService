@@ -3,19 +3,19 @@ using DirectoryService.Contracts.DepartmentContracts;
 using Microsoft.EntityFrameworkCore;
 using Shared.Core;
 
-namespace DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentsTree;
+namespace DirectoryService.Application.UseCases.DepartmentCases.Queries.GetRootDepartments;
 
-public class GetDepartmentsTreeQueryHandler : IQueryHandler<GetDepartmentsTreeQuery, IReadOnlyList<DepartmentTreeItemDto>>
+public class GetRootDepartmentsQueryHandler : IQueryHandler<GetRootDepartmentsQuery, IReadOnlyList<DepartmentTreeItemDto>>
 {
     private readonly IReadDbContext _readDbContext;
 
-    public GetDepartmentsTreeQueryHandler(IReadDbContext readDbContext)
+    public GetRootDepartmentsQueryHandler(IReadDbContext readDbContext)
     {
         _readDbContext = readDbContext;
     }
 
     public async Task<IReadOnlyList<DepartmentTreeItemDto>> HandleAsync(
-        GetDepartmentsTreeQuery query,
+        GetRootDepartmentsQuery query,
         CancellationToken cancellationToken)
     {
         return await _readDbContext.DepartmentsRead

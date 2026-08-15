@@ -9,8 +9,8 @@ using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmen
 using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartments;
 using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentsAncestors;
 using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentsChildren;
-using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentsTree;
 using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentsTreeSearch;
+using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetRootDepartments;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Presentation.ResponseExtensions;
@@ -33,7 +33,7 @@ public class DepartmentController : ControllerBase
     private readonly ICommandHandler<RestoreDepartmentCommand, RestoreDepartmentResponse> _restoreHandler;
     private readonly IQueryHandler<GetDepartmentByIdQuery, GetDepartmentDto> _getByIdHandler;
     private readonly IQueryHandler<GetDepartmentsQuery, PagedResult<DepartmentListItemDto>> _getByFilterHandler;
-    private readonly IQueryHandler<GetDepartmentsTreeQuery, IReadOnlyList<DepartmentTreeItemDto>> _getTreeHandler;
+    private readonly IQueryHandler<GetRootDepartmentsQuery, IReadOnlyList<DepartmentTreeItemDto>> _getRootsHandler;
     private readonly IQueryHandler<GetDepartmentsChildrenQuery, IReadOnlyList<DepartmentTreeItemDto>?> _getChildrenHandler;
     private readonly IQueryHandler<GetDepartmentsAncestorsQuery, IReadOnlyList<DepartmentTreeItemDto>?> _getAncestorsHandler;
     private readonly IQueryHandler<GetDepartmentsTreeSearchQuery, IReadOnlyList<DepartmentTreeItemDto>> _getTreeSearchHandler;
@@ -49,7 +49,7 @@ public class DepartmentController : ControllerBase
         ICommandHandler<RestoreDepartmentCommand, RestoreDepartmentResponse> restoreHandler,
         IQueryHandler<GetDepartmentByIdQuery, GetDepartmentDto> getByIdHandler,
         IQueryHandler<GetDepartmentsQuery, PagedResult<DepartmentListItemDto>> getByFilterHandler,
-        IQueryHandler<GetDepartmentsTreeQuery, IReadOnlyList<DepartmentTreeItemDto>> getTreeHandler,
+        IQueryHandler<GetRootDepartmentsQuery, IReadOnlyList<DepartmentTreeItemDto>> getRootsHandler,
         IQueryHandler<GetDepartmentsChildrenQuery, IReadOnlyList<DepartmentTreeItemDto>?> getChildrenHandler,
         IQueryHandler<GetDepartmentsAncestorsQuery, IReadOnlyList<DepartmentTreeItemDto>?> getAncestorsHandler,
         IQueryHandler<GetDepartmentsTreeSearchQuery, IReadOnlyList<DepartmentTreeItemDto>> getTreeSearchHandler,
@@ -64,7 +64,7 @@ public class DepartmentController : ControllerBase
         _restoreHandler = restoreHandler;
         _getByIdHandler = getByIdHandler;
         _getByFilterHandler = getByFilterHandler;
-        _getTreeHandler = getTreeHandler;
+        _getRootsHandler = getRootsHandler;
         _getChildrenHandler = getChildrenHandler;
         _getAncestorsHandler = getAncestorsHandler;
         _getTreeSearchHandler = getTreeSearchHandler;
@@ -236,12 +236,9 @@ public class DepartmentController : ControllerBase
     public async Task<IActionResult> GetTreeAsync(
         CancellationToken cancellationToken = default)
     {
-        var query = new GetDepartmentsTreeQuery();
+        var query = new GetRootDepartmentsQuery();
         
-        var response = await _getTreeHandler.HandleAsync(query, cancellationToken);
-
-        if (response.Count == 0)
-            return NotFound();
+        var response = await _getRootsHandler.HandleAsync(query, cancellationToken);
         
         _logger.LogInformation("Root-подразделения получены успешно.");
         return Ok(Envelope.Ok(response));
