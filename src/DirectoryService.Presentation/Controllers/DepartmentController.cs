@@ -7,6 +7,10 @@ using DirectoryService.Application.UseCases.DepartmentCases.Commands.RestoreDepa
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.UpdateDepartmentLocations;
 using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentById;
 using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartments;
+using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentsAncestors;
+using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentsChildren;
+using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentsTreeSearch;
+using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetRootDepartments;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Presentation.ResponseExtensions;
@@ -29,6 +33,10 @@ public class DepartmentController : ControllerBase
     private readonly ICommandHandler<RestoreDepartmentCommand, RestoreDepartmentResponse> _restoreHandler;
     private readonly IQueryHandler<GetDepartmentByIdQuery, GetDepartmentDto> _getByIdHandler;
     private readonly IQueryHandler<GetDepartmentsQuery, PagedResult<DepartmentListItemDto>> _getByFilterHandler;
+    private readonly IQueryHandler<GetRootDepartmentsQuery, IReadOnlyList<DepartmentTreeItemDto>> _getRootsHandler;
+    private readonly IQueryHandler<GetDepartmentsChildrenQuery, IReadOnlyList<DepartmentTreeItemDto>?> _getChildrenHandler;
+    private readonly IQueryHandler<GetDepartmentsAncestorsQuery, IReadOnlyList<DepartmentTreeItemDto>?> _getAncestorsHandler;
+    private readonly IQueryHandler<GetDepartmentsTreeSearchQuery, IReadOnlyList<DepartmentTreeItemDto>> _getTreeSearchHandler;
     private readonly ILogger<DepartmentController> _logger;
 
     public DepartmentController(
@@ -41,6 +49,10 @@ public class DepartmentController : ControllerBase
         ICommandHandler<RestoreDepartmentCommand, RestoreDepartmentResponse> restoreHandler,
         IQueryHandler<GetDepartmentByIdQuery, GetDepartmentDto> getByIdHandler,
         IQueryHandler<GetDepartmentsQuery, PagedResult<DepartmentListItemDto>> getByFilterHandler,
+        IQueryHandler<GetRootDepartmentsQuery, IReadOnlyList<DepartmentTreeItemDto>> getRootsHandler,
+        IQueryHandler<GetDepartmentsChildrenQuery, IReadOnlyList<DepartmentTreeItemDto>?> getChildrenHandler,
+        IQueryHandler<GetDepartmentsAncestorsQuery, IReadOnlyList<DepartmentTreeItemDto>?> getAncestorsHandler,
+        IQueryHandler<GetDepartmentsTreeSearchQuery, IReadOnlyList<DepartmentTreeItemDto>> getTreeSearchHandler,
         ILogger<DepartmentController> logger)
     {
         _createHandler = createHandler;
@@ -52,6 +64,10 @@ public class DepartmentController : ControllerBase
         _restoreHandler = restoreHandler;
         _getByIdHandler = getByIdHandler;
         _getByFilterHandler = getByFilterHandler;
+        _getRootsHandler = getRootsHandler;
+        _getChildrenHandler = getChildrenHandler;
+        _getAncestorsHandler = getAncestorsHandler;
+        _getTreeSearchHandler = getTreeSearchHandler;
         _logger = logger;
     }
 
@@ -214,5 +230,65 @@ public class DepartmentController : ControllerBase
         }
 
         return Ok(Envelope.Ok(result.Value));
+    }
+
+    [HttpGet("tree")]
+    public async Task<IActionResult> GetTreeAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetRootDepartmentsQuery();
+        
+        var response = await _getRootsHandler.HandleAsync(query, cancellationToken);
+        
+        _logger.LogInformation("Root-подразделения получены успешно.");
+        return Ok(Envelope.Ok(response));
+    }
+
+    [HttpGet("{departmentId:guid}/children")]
+    public async Task<IActionResult> GetChildrenAsync(
+        [FromRoute] Guid departmentId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetDepartmentsChildrenQuery(departmentId);
+
+        var response = await _getChildrenHandler.HandleAsync(query, cancellationToken);
+        
+        if (response is null)
+            return NotFound();
+        
+        _logger.LogInformation("Дети root-подразделения получены успешно.");
+        return Ok(Envelope.Ok(response));
+    }
+
+    [HttpGet("{departmentId:guid}/ancestors")]
+    public async Task<IActionResult> GetAncestorsAsync(
+        [FromRoute] Guid departmentId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetDepartmentsAncestorsQuery(departmentId);
+
+        var response = await _getAncestorsHandler.HandleAsync(query, cancellationToken);
+
+        if (response is null)
+            return NotFound("Такого подразделения не существует.");
+        
+        _logger.LogInformation("Предки подразделения получены успешно.");
+        return Ok(Envelope.Ok(response));
+    }
+
+    [HttpGet("tree/search")]
+    public async Task<IActionResult> GetTreeSearchAsync(
+        [FromQuery] string q,
+        CancellationToken cancellationToken = default)
+    {
+        if (q.Length < 2)
+            return BadRequest("Поисковая строка должна быть не менее двух символов");
+        
+        var query = new GetDepartmentsTreeSearchQuery(q);
+
+        var response = await _getTreeSearchHandler.HandleAsync(query, cancellationToken);
+        
+        _logger.LogInformation("Поиск подразделений выполнен.");
+        return Ok(Envelope.Ok(response));
     }
 }
