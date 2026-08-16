@@ -24,5 +24,8 @@ public class DepartmentPositionsConfigurations : IEntityTypeConfiguration<Depart
         builder.Property(dp => dp.PositionId)
             .IsRequired()
             .HasColumnName("position_id");
+
+        builder.HasIndex(dp => dp.PositionId)
+            .HasDatabaseName("ix_department_positions_position_id");
     }
 }

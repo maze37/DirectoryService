@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DirectoryService.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DirectoryService.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260816111431_AddDepartmentNameTrgmIndex")]
+    partial class AddDepartmentNameTrgmIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -127,8 +130,7 @@ namespace DirectoryService.Infrastructure.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("LocationId")
-                        .HasDatabaseName("ix_department_locations_location_id");
+                    b.HasIndex("LocationId");
 
                     b.ToTable("department_locations", (string)null);
                 });
@@ -153,8 +155,7 @@ namespace DirectoryService.Infrastructure.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("PositionId")
-                        .HasDatabaseName("ix_department_positions_position_id");
+                    b.HasIndex("PositionId");
 
                     b.ToTable("department_positions", (string)null);
                 });
