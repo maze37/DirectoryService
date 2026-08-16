@@ -24,5 +24,8 @@ public class DepartmentLocationsConfigurations : IEntityTypeConfiguration<Depart
         builder.Property(dl => dl.LocationId)
             .IsRequired()
             .HasColumnName("location_id");
+        
+        builder.HasIndex(dl => dl.LocationId)
+            .HasDatabaseName("ix_department_locations_location_id");
     }
 }
