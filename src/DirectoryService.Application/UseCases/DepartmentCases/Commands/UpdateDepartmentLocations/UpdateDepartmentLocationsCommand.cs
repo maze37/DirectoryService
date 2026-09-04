@@ -1,5 +1,5 @@
 ﻿using DirectoryService.Contracts.DepartmentContracts;
-using Shared.Core;
+using Core.Abstractions;
 
 namespace DirectoryService.Application.UseCases.DepartmentCases.Commands.UpdateDepartmentLocations;
 

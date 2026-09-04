@@ -1,6 +1,6 @@
-﻿using DirectoryService.Contracts.Constants;
+﻿using Core.Abstractions;
+using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
-using Shared.Core;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Queries.GetLocations;
 

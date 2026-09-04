@@ -1,12 +1,13 @@
-﻿using CSharpFunctionalExtensions;
+﻿using Core.Abstractions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.DepartmentLocations;
 using FluentValidation;
-using Shared.Core;
 using Shared.Result;
+using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
 using ILogger = Serilog.ILogger;
 
 namespace DirectoryService.Application.UseCases.DepartmentCases.Commands.UpdateDepartmentLocations;

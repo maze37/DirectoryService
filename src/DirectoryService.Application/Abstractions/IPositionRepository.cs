@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Position;
+using Shared.Result;
 
 namespace DirectoryService.Application.Abstractions;
 

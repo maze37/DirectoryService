@@ -3,6 +3,7 @@ using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
 using Microsoft.Extensions.Logging;
+using Shared.Result;
 
 namespace DirectoryService.Infrastructure.Database;
 

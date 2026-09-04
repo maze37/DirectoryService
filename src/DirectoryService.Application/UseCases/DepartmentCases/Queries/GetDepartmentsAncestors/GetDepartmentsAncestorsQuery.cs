@@ -1,5 +1,5 @@
-﻿using DirectoryService.Contracts.DepartmentContracts;
-using Shared.Core;
+﻿using Core.Abstractions;
+using DirectoryService.Contracts.DepartmentContracts;
 
 namespace DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmentsAncestors;
 

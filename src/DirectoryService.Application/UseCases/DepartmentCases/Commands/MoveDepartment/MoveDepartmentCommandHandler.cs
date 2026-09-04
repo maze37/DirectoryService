@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using Core.Abstractions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Application.Validation;
@@ -6,7 +7,8 @@ using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Shared.Core;
+using Shared.Result;
+using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
 
 namespace DirectoryService.Application.UseCases.DepartmentCases.Commands.MoveDepartment;
 

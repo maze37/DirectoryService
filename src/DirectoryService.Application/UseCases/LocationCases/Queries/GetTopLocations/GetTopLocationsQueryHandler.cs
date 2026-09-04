@@ -1,7 +1,7 @@
-﻿using Dapper;
+﻿using Core.Abstractions;
+using Dapper;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.LocationContracts;
-using Shared.Core;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Queries.GetTopLocations;
 

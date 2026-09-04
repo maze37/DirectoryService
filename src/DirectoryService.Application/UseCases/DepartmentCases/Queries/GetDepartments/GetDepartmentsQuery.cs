@@ -1,6 +1,6 @@
-﻿using DirectoryService.Contracts.Constants;
+﻿using Core.Abstractions;
+using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.DepartmentContracts;
-using Shared.Core;
 
 namespace DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartments;
 

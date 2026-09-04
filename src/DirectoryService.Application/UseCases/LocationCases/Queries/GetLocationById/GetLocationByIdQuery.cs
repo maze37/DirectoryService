@@ -1,5 +1,5 @@
-﻿using DirectoryService.Contracts.LocationContracts;
-using Shared.Core;
+﻿using Core.Abstractions;
+using DirectoryService.Contracts.LocationContracts;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Queries.GetLocationById;
 

@@ -1,3 +1,4 @@
+using Core.Abstractions;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
@@ -8,7 +9,8 @@ using DirectoryService.Domain.Location;
 using DirectoryService.Domain.Location.ValueObjects;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Shared.Core;
+using Shared.Result;
+using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Commands.CreateLocation;
 

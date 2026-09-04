@@ -1,4 +1,4 @@
-﻿using Shared.Core;
+﻿using Core.Abstractions;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Commands.DeleteLocation;
 

@@ -1,9 +1,9 @@
 ﻿using System.Data;
+using Core.Abstractions;
 using Dapper;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
-using Shared.Core;
 using Shared.Exceptions;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Queries.GetLocations;

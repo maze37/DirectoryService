@@ -1,5 +1,5 @@
-﻿using DirectoryService.Contracts.PositionContracts;
-using Shared.Core;
+﻿using Core.Abstractions;
+using DirectoryService.Contracts.PositionContracts;
 
 namespace DirectoryService.Application.UseCases.PositionCases.Commands.CreatePosition;
 

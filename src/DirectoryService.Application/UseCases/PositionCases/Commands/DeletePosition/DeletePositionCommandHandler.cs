@@ -1,11 +1,13 @@
-﻿using CSharpFunctionalExtensions;
+﻿using Core.Abstractions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.PositionContracts;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Shared.Core;
+using Shared.Result;
+using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
 
 namespace DirectoryService.Application.UseCases.PositionCases.Commands.DeletePosition;
 

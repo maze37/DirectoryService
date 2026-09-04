@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Core.Abstractions;
 using DirectoryService.Application.UseCases.LocationCases.Commands.CreateLocation;
 using DirectoryService.Application.UseCases.LocationCases.Commands.DeleteLocation;
 using DirectoryService.Application.UseCases.LocationCases.Commands.RestoreLocation;
@@ -8,10 +9,8 @@ using DirectoryService.Application.UseCases.LocationCases.Queries.GetTopLocation
 using DirectoryService.Application.UseCases.PositionCases.Commands.RestorePosition;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
-using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Core;
 using Shared.Result;
 
 namespace DirectoryService.Presentation.Controllers;

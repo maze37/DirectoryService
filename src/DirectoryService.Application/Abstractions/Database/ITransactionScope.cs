@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Shared.Result;
 
 namespace DirectoryService.Application.Abstractions.Database;
 

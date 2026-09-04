@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.IntegrationTests.Infrastructure;
-using Shared.Result;
 
 namespace DirectoryService.IntegrationTests.Departments;
 

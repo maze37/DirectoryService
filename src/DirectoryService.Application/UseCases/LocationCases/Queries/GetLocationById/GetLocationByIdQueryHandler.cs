@@ -1,7 +1,7 @@
-﻿using DirectoryService.Application.Abstractions.Database;
+﻿using Core.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.LocationContracts;
 using Microsoft.EntityFrameworkCore;
-using Shared.Core;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Queries.GetLocationById;
 

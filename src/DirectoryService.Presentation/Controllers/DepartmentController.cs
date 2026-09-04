@@ -1,4 +1,5 @@
-﻿using DirectoryService.Application.UseCases.DepartmentCases.Commands.AttachPositionToDepartment;
+﻿using Core.Abstractions;
+using DirectoryService.Application.UseCases.DepartmentCases.Commands.AttachPositionToDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.CreateDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.DeleteDepartment;
 using DirectoryService.Application.UseCases.DepartmentCases.Commands.DetachPositionFromDepartment;
@@ -15,7 +16,6 @@ using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Presentation.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Core;
 using Shared.Result;
 
 namespace DirectoryService.Presentation.Controllers;

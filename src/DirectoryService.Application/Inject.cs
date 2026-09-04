@@ -1,7 +1,7 @@
 using System.Reflection;
+using Core.Abstractions;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Core;
 
 namespace DirectoryService.Application;
 

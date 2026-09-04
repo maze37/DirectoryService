@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using Core.Abstractions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Application.Validation;
@@ -9,8 +10,8 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Serilog;
-using Shared.Core;
 using Shared.Result;
+using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
 
 namespace DirectoryService.Application.UseCases.DepartmentCases.Commands.CreateDepartment;
 

@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using FluentValidation;
 using FluentValidation.Results;
+using Shared.Result;
 
 namespace DirectoryService.Application.Validation;
 
