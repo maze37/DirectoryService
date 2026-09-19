@@ -4,9 +4,9 @@ using DirectoryService.Application.UseCases.PositionCases.Commands.DeletePositio
 using DirectoryService.Application.UseCases.PositionCases.Commands.RenamePosition;
 using DirectoryService.Application.UseCases.PositionCases.Commands.RestorePosition;
 using DirectoryService.Contracts.PositionContracts;
-using DirectoryService.Presentation.ResponseExtensions;
+using Framework.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Result;
+using SharedKernel;
 
 namespace DirectoryService.Presentation.Controllers;
 

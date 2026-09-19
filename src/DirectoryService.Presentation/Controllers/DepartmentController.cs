@@ -14,9 +14,9 @@ using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartmen
 using DirectoryService.Application.UseCases.DepartmentCases.Queries.GetRootDepartments;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.DepartmentContracts;
-using DirectoryService.Presentation.ResponseExtensions;
+using Framework.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Result;
+using SharedKernel;
 
 namespace DirectoryService.Presentation.Controllers;
 
@@ -194,8 +194,7 @@ public class DepartmentController : ControllerBase
         if (result is null)  // проверяем null вместо IsFailure
         {
             _logger.LogWarning("Отдел {DepartmentId} не найден.", id);
-            return NotFound(Envelope.Error(
-                Errors.General.NotFound(id)));
+            return NotFound(Envelope.Fail(GeneralErrors.NotFound(id)));
         }
     
         _logger.LogInformation("Отдел {DepartmentId} получено успешно.", id);

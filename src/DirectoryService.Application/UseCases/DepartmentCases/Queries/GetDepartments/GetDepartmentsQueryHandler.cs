@@ -3,7 +3,7 @@ using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.DepartmentContracts;
 using Microsoft.EntityFrameworkCore;
-using Shared.Exceptions;
+using SharedKernel.Exceptions;
 
 namespace DirectoryService.Application.UseCases.DepartmentCases.Queries.GetDepartments;
 

@@ -1,6 +1,7 @@
 using DirectoryService.Application;
 using DirectoryService.Infrastructure;
 using DirectoryService.Infrastructure.BackgroundServices.Cleanup;
+using Framework.Logging;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DirectoryService.Presentation.Configuration;

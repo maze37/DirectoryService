@@ -3,9 +3,9 @@ using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Domain.Department;
 using Microsoft.EntityFrameworkCore;
-using Shared.Result;
 using Dapper;
 using DirectoryService.Domain.DepartmentPositions;
+using SharedKernel;
 using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
 namespace DirectoryService.Infrastructure.Repositories;
@@ -34,7 +34,7 @@ public class DepartmentRepository : IDepartmentRepository
                 .FirstOrDefaultAsync(predicate, cancellationToken);
 
             if (department is null)
-                return Errors.General.NotFound(name: "department");
+                return GeneralErrors.NotFound(department.Id, "departmentId");
 
             return department;
         }
@@ -62,7 +62,7 @@ public class DepartmentRepository : IDepartmentRepository
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (department is null)
-                return Errors.General.NotFound(name: "department");
+                return GeneralErrors.NotFound(department.Id, "department");
 
             return department;
         }
@@ -203,7 +203,7 @@ public class DepartmentRepository : IDepartmentRepository
                 .FirstOrDefaultAsync(x => x.DepartmentId == departmentId && x.PositionId == positionId, cancellationToken);
             
             if (departmentPosition is null)
-                return Errors.General.NotFound(name: "department.position");
+                return GeneralErrors.NotFound(departmentPosition.Id, "departmentPosition");
 
             return departmentPosition;
         }

@@ -1,5 +1,4 @@
 using CSharpFunctionalExtensions;
-using ValueObject = Shared.Base.ValueObject;
 
 namespace DirectoryService.Domain.Department.ValueObjects;
 

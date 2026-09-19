@@ -1,17 +1,15 @@
-﻿using System.Runtime.CompilerServices;
-using Core.Abstractions;
+﻿using Core.Abstractions;
 using DirectoryService.Application.UseCases.LocationCases.Commands.CreateLocation;
 using DirectoryService.Application.UseCases.LocationCases.Commands.DeleteLocation;
 using DirectoryService.Application.UseCases.LocationCases.Commands.RestoreLocation;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetLocationById;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetLocations;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetTopLocations;
-using DirectoryService.Application.UseCases.PositionCases.Commands.RestorePosition;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
-using DirectoryService.Presentation.ResponseExtensions;
+using Framework.ResponseExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Result;
+using SharedKernel;
 
 namespace DirectoryService.Presentation.Controllers;
 
@@ -92,8 +90,7 @@ public class LocationController : ControllerBase
         if (result is null)
         {
             _logger.LogWarning("Локация {LocationId} не найдена.", id);
-            return NotFound(Envelope.Error(
-                Errors.General.NotFound(id)));
+            return NotFound(Envelope.Fail(GeneralErrors.NotFound(id)));
         }
         
         _logger.LogInformation("Локация {LocationId} успешно получена.", id);

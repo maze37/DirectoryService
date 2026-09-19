@@ -1,12 +1,12 @@
 ﻿using Core.Abstractions;
+using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
-using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.DepartmentLocations;
 using FluentValidation;
-using Shared.Result;
+using SharedKernel;
 using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
 using ILogger = Serilog.ILogger;
 
@@ -75,7 +75,7 @@ public class UpdateDepartmentLocationsCommandHandler :
         var allLocationsExist = await _locationRepository
             .AllExistAsync(command.Request.LocationIds, cancellationToken);
         if (!allLocationsExist)
-            return Errors.General.NotFound(name: "locations");
+            return GeneralErrors.NotFound(null, "locations");
         
         // Формируем новый список привязок и обновляем
         var newLocations = command.Request.LocationIds

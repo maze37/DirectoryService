@@ -1,8 +1,8 @@
 ﻿using Core.Abstractions;
+using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
-using DirectoryService.Application.Validation;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department;
 using DirectoryService.Domain.DepartmentLocations;
@@ -10,7 +10,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Serilog;
-using Shared.Result;
+using SharedKernel;
 using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
 
 namespace DirectoryService.Application.UseCases.DepartmentCases.Commands.CreateDepartment;
@@ -57,7 +57,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         bool locationExists = await _locationRepository
             .AllExistAsync(command.Request.LocationIds, cancellationToken);
         if (!locationExists)
-            return Errors.General.NotFound(name: "locations");
+            return GeneralErrors.NotFound(null, "locations");
 
         // Для несуществующих строк в бд FOR UPDATE не сработает.
         // Для красоты стоит, но есть уникальный индекс в бд который спасает от race condition.

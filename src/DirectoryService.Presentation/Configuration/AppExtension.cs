@@ -1,6 +1,4 @@
-﻿using DirectoryService.Infrastructure;
-using DirectoryService.Presentation.Middlewares;
-using Microsoft.EntityFrameworkCore;
+﻿using Framework.Middlewares;
 using Serilog;
 
 namespace DirectoryService.Presentation.Configuration;

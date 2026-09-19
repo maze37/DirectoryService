@@ -4,7 +4,7 @@ using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Shared.Result;
+using SharedKernel;
 
 namespace DirectoryService.IntegrationTests.Locations;
 

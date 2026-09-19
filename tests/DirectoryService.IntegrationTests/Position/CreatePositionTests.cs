@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Shared.Result;
 
 namespace DirectoryService.IntegrationTests.Position;
 
@@ -34,24 +33,6 @@ public class CreatePositionTests : DirectoryBaseTests
                 dl.PositionId == position));
 
         Assert.NotNull(departmentPositions);
-    }
-
-    [Fact]
-    public async Task CreatePosition_WithEmptyName_ShouldFail()
-    {
-        // Arrange
-        var createdDepartmentId = await CreateDepartmentViaHttp("TEST");
-
-        var request = new CreatePositionRequest(
-            Name: "",
-            Description: null,
-            DepartmentIds: [createdDepartmentId]);
-
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/positions/", request);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]

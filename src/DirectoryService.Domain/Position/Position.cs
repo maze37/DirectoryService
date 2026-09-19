@@ -2,16 +2,17 @@ using CSharpFunctionalExtensions;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Position.ValueObjects;
-using Shared.Base;
-using Shared.Result;
+using SharedKernel;
 
 namespace DirectoryService.Domain.Position;
 
 /// <summary>
 /// Должности сотрудников
 /// </summary>
-public sealed class Position : AggregateRoot
+public sealed class Position
 {
+    public Guid Id { get; private set; }
+    
     /// <summary>
     /// Название должности. Уникальное, от 3 до 100 символов.
     /// </summary>
@@ -52,16 +53,19 @@ public sealed class Position : AggregateRoot
     /// </summary>
     public IReadOnlyList<DepartmentPosition> DepartmentPosition { get; private set; } = null!;
     
-    // EF Core
-    private Position() : base(Guid.Empty) { }
+    public long Version { get; private set; }
     
+    // EF Core
+    private Position() { }
+
     private Position(
         Guid id,
         PositionName name,
         string? description,
         DateTimeOffset createdWhen,
-        List<DepartmentPosition> departmentPositions) : base(id)
+        List<DepartmentPosition> departmentPositions)
     {
+        Id = id;
         Name = name;
         Description = description;
         IsActive = true;

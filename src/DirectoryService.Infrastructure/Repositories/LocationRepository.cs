@@ -3,7 +3,7 @@ using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Domain.Location;
 using Microsoft.EntityFrameworkCore;
-using Shared.Result;
+using SharedKernel;
 
 namespace DirectoryService.Infrastructure.Repositories;
 
@@ -48,7 +48,7 @@ public class LocationRepository : ILocationRepository
                 .FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
 
             if (location is null)
-                return Errors.General.NotFound(name: "location");
+                return GeneralErrors.NotFound(location.Id, "location");
 
             return location;
         }

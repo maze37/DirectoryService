@@ -4,7 +4,7 @@ using DirectoryService.Application.Abstractions;
 using DirectoryService.Domain.Position;
 using DirectoryService.Domain.Position.ValueObjects;
 using Microsoft.EntityFrameworkCore;
-using Shared.Result;
+using SharedKernel;
 
 namespace DirectoryService.Infrastructure.Repositories;
 
@@ -58,7 +58,7 @@ public class PositionRepository : IPositionRepository
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (position is null)
-                return Errors.General.NotFound(name: "position");
+                return GeneralErrors.NotFound(position.Id, "position");
 
             return position;
         }

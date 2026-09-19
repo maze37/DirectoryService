@@ -3,9 +3,8 @@ using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Result;
+using SharedKernel;
 
 namespace DirectoryService.IntegrationTests.Infrastructure;
 

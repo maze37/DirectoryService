@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using CSharpFunctionalExtensions;
-using Shared.Result;
-using ValueObject = Shared.Base.ValueObject;
+using SharedKernel;
 
 namespace DirectoryService.Domain.Department.ValueObjects;
 

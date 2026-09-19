@@ -2,7 +2,7 @@
 using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Department;
 using DirectoryService.Domain.DepartmentPositions;
-using Shared.Result;
+using SharedKernel;
 using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
 namespace DirectoryService.Application.Abstractions;

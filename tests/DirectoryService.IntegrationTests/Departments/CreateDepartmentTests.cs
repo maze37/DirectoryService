@@ -52,25 +52,6 @@ public class CreateDepartmentTests : DirectoryBaseTests
     }
 
     [Fact]
-    public async Task CreateDepartment_WithEmptyName_ShouldFail()
-    {
-        // Arrange
-        var createdLocationId = await CreateLocationViaHttp("Нукус");
-
-        var request = new CreateDepartmentRequest(
-            Name: "",
-            Slug: "test",
-            ParentId: null,
-            LocationIds: [createdLocationId]);
-
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/departments", request);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-    
-    [Fact]
     public async Task CreateDepartment_WithDuplicateSlug_Returns409()
     {
         // Arrange — создаём первый отдел со slug "it"

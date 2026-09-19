@@ -1,6 +1,8 @@
-﻿services:
+name: directory-service
+
+services:
   postgres:
-    container_name: postgres
+    container_name: postgres-ds
     image: postgres:18-alpine
     restart: always
     environment:
@@ -14,24 +16,25 @@
       - postgres-data:/var/lib/postgresql
 
   seq:
-    container_name: seq
+    container_name: seq-ds
     image: datalust/seq:latest
     environment:
       ACCEPT_EULA: "Y"
       SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
     ports:
       - "8081:80"
-      - "5341:5341"
     restart: always
 
   directory-service:
     build:
       context: .
       dockerfile: src/DirectoryService.Presentation/Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
     container_name: directory-service
     restart: always
     ports:
-      - "5001:8080"
+      - "5001:8002"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DirectoryServiceDb: "Host=postgres;Port=5432;Database=directory_service_db;Username=postgres;Password=1234"

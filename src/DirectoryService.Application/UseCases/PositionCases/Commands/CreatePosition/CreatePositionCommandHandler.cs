@@ -1,15 +1,14 @@
 ﻿using Core.Abstractions;
+using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
-using DirectoryService.Application.Validation;
-using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Position;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Shared.Result;
+using SharedKernel;
 using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
 
 namespace DirectoryService.Application.UseCases.PositionCases.Commands.CreatePosition;
@@ -58,7 +57,7 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
         var departmentExists = await _departmentRepository
             .AllExistAndActiveAsync(command.Request.DepartmentIds, cancellationToken);
         if (!departmentExists)
-            return Errors.General.NotFound(name: "department");
+            return GeneralErrors.NotFound(null, "department");
 
         var positionId = Guid.NewGuid();
         var departmentPositions = command.Request.DepartmentIds
@@ -79,14 +78,7 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
 
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
-        {
-            var constraint = saveResult.Error.InvalidField ?? "";
-
-            if (constraint.Contains(IndexConstants.Positions.Name))
-                return Error.Conflict("position.name.taken", "Должность с таким названием уже существует");
-
             return saveResult.Error;
-        }
 
         _logger.LogInformation("Должность {Name} создана", command.Request.Name);
         return new CreatePositionResponse(positionResult.Value.Id);

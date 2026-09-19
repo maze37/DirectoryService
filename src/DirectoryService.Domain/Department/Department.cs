@@ -2,8 +2,7 @@ using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Department.ValueObjects;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.DepartmentPositions;
-using Shared.Base;
-using Shared.Result;
+using SharedKernel;
 using Path = DirectoryService.Domain.Department.ValueObjects.Path;
 
 namespace DirectoryService.Domain.Department;
@@ -11,7 +10,7 @@ namespace DirectoryService.Domain.Department;
 /// <summary>
 /// Отдел в компании (отдел разработки, отдел продаж)
 /// </summary>
-public sealed class Department : AggregateRoot
+public sealed class Department
 {
     private readonly List<DepartmentLocation> _departmentLocations = [];
     private readonly List<DepartmentPosition> _departmentPositions = [];
@@ -20,6 +19,8 @@ public sealed class Department : AggregateRoot
     public IReadOnlyList<DepartmentLocation> Locations => _departmentLocations.AsReadOnly();
     public IReadOnlyList<DepartmentPosition> Positions => _departmentPositions.AsReadOnly();
     public IReadOnlyList<Department> Children => _childrenDepartments.AsReadOnly();
+    
+    public Guid Id { get; private set; }
     
     /// <summary>
     /// Название отдела.
@@ -81,7 +82,9 @@ public sealed class Department : AggregateRoot
     /// </summary>
     public DateTimeOffset UpdatedWhen { get; private set; }
     
-    private Department() : base(Guid.Empty) { }
+    public long Version { get; private set; }
+
+    private Department() { }
 
     public Department(
         Guid id,
@@ -94,14 +97,15 @@ public sealed class Department : AggregateRoot
         DateTimeOffset createdWhen,
         List<Department> children,
         IEnumerable<DepartmentLocation> departmentLocations,
-        IEnumerable<DepartmentPosition> departmentPositions) : base(id)
+        IEnumerable<DepartmentPosition> departmentPositions)
     {
+        Id = id;
         DepartmentName = departmentName;
         Slug = slug;
         ParentId = parentId;
         Path = path;
         Depth = depth;
-        ChildrenCount = children.Count();
+        ChildrenCount = children.Count;
         IsActive = true;
         CreatedWhen = createdWhen;
         UpdatedWhen = createdWhen;

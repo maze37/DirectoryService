@@ -1,6 +1,5 @@
 using CSharpFunctionalExtensions;
-using Shared.Result;
-using ValueObject = Shared.Base.ValueObject;
+using SharedKernel;
 
 namespace DirectoryService.Domain.Location.ValueObjects;
 
@@ -42,16 +41,16 @@ public class Address : ValueObject
         string? postalCode = null)
     {
         if (string.IsNullOrWhiteSpace(country))
-            return GeneralErrors.ValueIsRequired("country");
+            return GeneralErrors.ValueIsRequired(nameof(country));
             
         if (string.IsNullOrWhiteSpace(city))
-            return GeneralErrors.ValueIsRequired("city");
+            return GeneralErrors.ValueIsRequired(nameof(city));
             
         if (string.IsNullOrWhiteSpace(street))
-            return GeneralErrors.ValueIsRequired("street");
+            return GeneralErrors.ValueIsRequired(nameof(street));
             
         if (string.IsNullOrWhiteSpace(building))
-            return GeneralErrors.ValueIsRequired("building");
+            return GeneralErrors.ValueIsRequired(nameof(building));
         
         return new Address(
             country.Trim(),

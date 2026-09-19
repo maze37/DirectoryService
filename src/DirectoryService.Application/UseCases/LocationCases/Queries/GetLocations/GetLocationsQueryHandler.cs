@@ -4,7 +4,7 @@ using Dapper;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
-using Shared.Exceptions;
+using SharedKernel.Exceptions;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Queries.GetLocations;
 

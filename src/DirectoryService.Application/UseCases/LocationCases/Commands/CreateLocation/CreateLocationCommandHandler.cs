@@ -1,15 +1,14 @@
 using Core.Abstractions;
+using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
-using DirectoryService.Application.Validation;
-using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
 using DirectoryService.Domain.Location.ValueObjects;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Shared.Result;
+using SharedKernel;
 using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Commands.CreateLocation;
@@ -58,10 +57,7 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
             command.Request.Address.PostalCode);
 
         if (address.IsFailure)
-        {
-            transactionScope.Rollback();
             return address.Error;
-        }
 
         var locationResult = Location.Create(
             Guid.NewGuid(),
@@ -72,28 +68,13 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
             isDeleted: false);
         
         if (locationResult.IsFailure)
-        {
-            transactionScope.Rollback();
             return locationResult.Error;
-        }
 
         _locationRepository.Add(locationResult.Value);
         
         var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
         if (saveResult.IsFailure)
-        {
-            
-            
-            var constraint = saveResult.Error.InvalidField ?? "";
-        
-            if (constraint.Contains(IndexConstants.Locations.Name))
-                return Error.Conflict("location.name.taken", "Локация с таким названием уже существует");
-        
-            if (constraint.Contains(IndexConstants.Locations.Address))
-                return Error.Conflict("location.address.taken", "Локация с таким адресом уже существует");
-        
             return saveResult.Error;
-        }
 
         var commitResult = transactionScope.Commit();
         if (commitResult.IsFailure)

@@ -1,17 +1,17 @@
 using CSharpFunctionalExtensions;
-using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.Location.ValueObjects;
-using Shared.Base;
-using Shared.Result;
+using SharedKernel;
 
 namespace DirectoryService.Domain.Location;
 
 /// <summary>
 /// Где находятся подразделения
 /// </summary>
-public sealed class Location : AggregateRoot
+public sealed class Location
 {
+    public Guid Id { get; private set; }
+    
     /// <summary>
     /// Название локации.
     /// </summary>
@@ -57,17 +57,20 @@ public sealed class Location : AggregateRoot
     /// </summary>
     public IReadOnlyList<DepartmentLocation> DepartmentLocations { get; private set; } = null!;
     
-    // EF Core
-    private Location() : base(Guid.Empty) { }
+    public long Version { get; private set; }
     
+    // EF Core
+    private Location() { }
+
     private Location(
         Guid id,
         LocationName name,
         Address address,
         Timezone timezone,
         DateTimeOffset createdWhen,
-        bool isDeleted) : base(id)
+        bool isDeleted)
     {
+        Id = id;
         Name = name;
         Address = address;
         Timezone = timezone;

@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.IntegrationTests.Infrastructure;
-using Shared.Result;
+using SharedKernel;
 
 namespace DirectoryService.IntegrationTests.Departments;
 
