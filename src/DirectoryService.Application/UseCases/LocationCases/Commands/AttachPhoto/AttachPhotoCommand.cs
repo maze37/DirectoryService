@@ -1,5 +1,6 @@
 ﻿using Core.Abstractions;
 using DirectoryService.Contracts;
+using DirectoryService.Contracts.LocationContracts;
 
 namespace DirectoryService.Application.UseCases.LocationCases.Commands.AttachPhoto;
 

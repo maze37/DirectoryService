@@ -3,6 +3,7 @@ using Core.Database;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts;
+using DirectoryService.Contracts.LocationContracts;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
 

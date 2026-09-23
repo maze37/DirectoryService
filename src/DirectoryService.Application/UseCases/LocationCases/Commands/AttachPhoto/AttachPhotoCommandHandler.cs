@@ -2,7 +2,7 @@
 using Core.Database;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
-using DirectoryService.Contracts;
+using DirectoryService.Contracts.LocationContracts;
 using FileService.Contracts.HttpCommunication;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
@@ -32,23 +32,23 @@ public class AttachPhotoCommandHandler : ICommandHandler<AttachPhotoCommand, Att
         AttachPhotoCommand command, 
         CancellationToken cancellationToken)
     {
+        if (command.Request.PhotoAssetId == Guid.Empty)
+            return Error.Validation("photo.asset.id.invalid", "PhotoAssetId не может быть пустым");
+        
         var locationResult = await _locationRepository
             .GetByAsync(l => l.Id == command.LocationId, cancellationToken);
         if (locationResult.IsFailure)
             return locationResult.Error;
 
-        if (command.Request.PhotoAssetId != Guid.Empty)
-        {
-            var existsResult = await _fileCommunicationService.CheckMediaAssetExists(
-                    command.Request.PhotoAssetId, 
-                    cancellationToken);
+        var existsResult = await _fileCommunicationService.CheckMediaAssetExists(
+            command.Request.PhotoAssetId, 
+            cancellationToken);
 
-            if (existsResult.IsFailure)
-                return existsResult.Error;
+        if (existsResult.IsFailure)
+            return existsResult.Error;
 
-            if (!existsResult.Value.AssetExists)
-                return Error.NotFound();
-        }
+        if (!existsResult.Value.AssetExists)
+            return Error.NotFound();
 
         var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transaction.IsFailure)

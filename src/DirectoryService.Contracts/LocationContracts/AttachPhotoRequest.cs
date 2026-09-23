@@ -1,3 +1,3 @@
-﻿namespace DirectoryService.Contracts;
+﻿namespace DirectoryService.Contracts.LocationContracts;
 
 public record AttachPhotoRequest(Guid PhotoAssetId);
