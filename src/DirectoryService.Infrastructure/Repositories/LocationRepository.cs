@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Linq.Expressions;
+using CSharpFunctionalExtensions;
 using Dapper;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Domain.Location;
@@ -30,6 +31,26 @@ public class LocationRepository : ILocationRepository
             .CountAsync(cancellationToken);
         
         return existingCount == locationIds.Count;
+    }
+    
+    public async Task<Result<Location, Error>> GetByAsync(
+        Expression<Func<Location, bool>> predicate,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var location = await _context.Locations
+                .FirstOrDefaultAsync(predicate, cancellationToken);
+
+            if (location is null)
+                return GeneralErrors.NotFound(null, "locationId");
+
+            return location;
+        }
+        catch (Exception)
+        {
+            return Error.Failure("location.get.failed", "Не удалось получить локацию");
+        }
     }
 
     public async Task<Result<Location, Error>> GetByIdWithLock(

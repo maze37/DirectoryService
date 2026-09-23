@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Linq.Expressions;
+using CSharpFunctionalExtensions;
 using DirectoryService.Domain.Location;
 using SharedKernel;
 
@@ -19,6 +20,13 @@ public interface ILocationRepository
     /// </summary>
     Task<bool> AllExistAsync(IReadOnlyList<Guid> locationIds, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Вернет Location по выбранному полю.
+    /// </summary>
+    Task<Result<Location, Error>> GetByAsync(
+        Expression<Func<Location, bool>> predicate,
+        CancellationToken cancellationToken = default);
+    
     /// <summary>
     /// Вернет Location с пес. блокировкой.
     /// </summary>

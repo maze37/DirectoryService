@@ -34,15 +34,23 @@ services:
     container_name: directory-service
     restart: always
     ports:
-      - "5001:8002"
+      - "8002:8002"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DirectoryServiceDb: "Host=postgres;Port=5432;Database=directory_service_db;Username=postgres;Password=1234"
       Serilog__WriteTo__1__Args__serverUrl: "http://seq:80"
+      FileServiceOptions__Url: "http://file-service:8003"
     depends_on:
       - postgres
       - seq
+    networks:
+      - default
+      - shared-network
 
 volumes:
   postgres-data:
     name: directoryservice-postgres-data
+    
+networks:
+  shared-network:
+    external: true

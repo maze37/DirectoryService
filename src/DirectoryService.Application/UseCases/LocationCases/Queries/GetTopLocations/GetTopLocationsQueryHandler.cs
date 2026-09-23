@@ -1,5 +1,6 @@
 ﻿using Core.Abstractions;
 using Dapper;
+using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.LocationContracts;
 
@@ -8,10 +9,14 @@ namespace DirectoryService.Application.UseCases.LocationCases.Queries.GetTopLoca
 public class GetTopLocationsQueryHandler : IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>>
 {
     private readonly IDbConnectionFactory _connectionFactory;
+    private readonly ILocationMediaEnrichmentService _locationMediaEnrichmentService;
 
-    public GetTopLocationsQueryHandler(IDbConnectionFactory connectionFactory)
+    public GetTopLocationsQueryHandler(
+        IDbConnectionFactory connectionFactory,
+        ILocationMediaEnrichmentService locationMediaEnrichmentService)
     {
         _connectionFactory = connectionFactory;
+        _locationMediaEnrichmentService = locationMediaEnrichmentService;
     }
 
     public async Task<List<TopLocationDto>?> HandleAsync(
@@ -25,6 +30,7 @@ public class GetTopLocationsQueryHandler : IQueryHandler<GetTopLocationsQuery, L
                                l.id,
                                l.name,
                                COUNT(dl.department_id) AS DepartmentCount,
+                               l.photo_asset_id      AS PhotoAssetId,
                                l.address_city        AS City,
                                l.address_office      AS Office,
                                l.address_street      AS Street,
@@ -34,7 +40,7 @@ public class GetTopLocationsQueryHandler : IQueryHandler<GetTopLocationsQuery, L
                            FROM locations l
                            LEFT JOIN department_locations dl ON l.id = dl.location_id
                            WHERE l.is_deleted = false
-                           GROUP BY l.id, l.name,
+                           GROUP BY l.id, l.name, l.photo_asset_id,
                                     l.address_country, l.address_city,
                                     l.address_street, l.address_building,
                                     l.address_office, l.address_postal_code
@@ -42,15 +48,23 @@ public class GetTopLocationsQueryHandler : IQueryHandler<GetTopLocationsQuery, L
                            LIMIT 5;
                            """;
 
-        var commandDefinition = new CommandDefinition(
-            sql,
-            cancellationToken: cancellationToken);
+        var commandDefinition = new CommandDefinition(sql, cancellationToken: cancellationToken);
 
-        var result = await connection.QueryAsync<TopLocationDto, AddressDto, TopLocationDto>(
+        var locations = await connection.QueryAsync<TopLocationDto, AddressDto, TopLocationDto>(
             commandDefinition,
             map: (location, address) => location with { Address = address },
             splitOn: "City");
 
-        return result.ToList();
+        var locationsList = locations.ToList();
+        
+        var enrichTasks = locationsList.Select(async loc =>
+        {
+            var mediaAssetDto = await _locationMediaEnrichmentService.EnrichMediaAssetDtoAsync(loc.PhotoAssetId, cancellationToken);
+            return loc with { MediaAssetDto = mediaAssetDto };
+        });
+
+        var enrichedLocations = await Task.WhenAll(enrichTasks);
+
+        return enrichedLocations.ToList();
     }
 }

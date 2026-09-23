@@ -1,3 +1,4 @@
+using Core.Database;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Infrastructure.BackgroundServices.Cleanup;
@@ -8,6 +9,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using IDbConnectionFactory = DirectoryService.Application.Abstractions.Database.IDbConnectionFactory;
 
 namespace DirectoryService.Infrastructure;
 

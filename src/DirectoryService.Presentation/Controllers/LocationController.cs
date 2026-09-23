@@ -1,10 +1,14 @@
 ﻿using Core.Abstractions;
+using DirectoryService.Application.UseCases.LocationCases.Commands.AttachPhoto;
 using DirectoryService.Application.UseCases.LocationCases.Commands.CreateLocation;
 using DirectoryService.Application.UseCases.LocationCases.Commands.DeleteLocation;
+using DirectoryService.Application.UseCases.LocationCases.Commands.RemovePhoto;
 using DirectoryService.Application.UseCases.LocationCases.Commands.RestoreLocation;
+using DirectoryService.Application.UseCases.LocationCases.Commands.UpdatePhoto;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetLocationById;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetLocations;
 using DirectoryService.Application.UseCases.LocationCases.Queries.GetTopLocations;
+using DirectoryService.Contracts;
 using DirectoryService.Contracts.Constants;
 using DirectoryService.Contracts.LocationContracts;
 using Framework.ResponseExtensions;
@@ -23,6 +27,9 @@ public class LocationController : ControllerBase
     private readonly IQueryHandler<GetLocationByIdQuery, GetLocationDto> _getByIdHandler;
     private readonly IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>> _getTopHandler;
     private readonly IQueryHandler<GetLocationsQuery, PagedResult<LocationListItemDto>> _getLocationsHandler;
+    private readonly ICommandHandler<AttachPhotoCommand, AttachPhotoResponse> _attachPhotoHandler;
+    private readonly ICommandHandler<UpdatePhotoCommand, UpdatePhotoResponse> _updatePhotoHandler;
+    private readonly ICommandHandler<RemovePhotoCommand, RemovePhotoResponse> _removePhotoHandler;
     private readonly ILogger<LocationController> _logger;
 
     public LocationController(
@@ -32,6 +39,9 @@ public class LocationController : ControllerBase
         IQueryHandler<GetLocationByIdQuery, GetLocationDto> getByIdHandler,
         IQueryHandler<GetTopLocationsQuery, List<TopLocationDto>> getTopHandler,
         IQueryHandler<GetLocationsQuery, PagedResult<LocationListItemDto>> getLocationsHandler,
+        ICommandHandler<AttachPhotoCommand, AttachPhotoResponse> attachPhotoHandler,
+        ICommandHandler<UpdatePhotoCommand, UpdatePhotoResponse> updatePhotoHandler,
+        ICommandHandler<RemovePhotoCommand, RemovePhotoResponse> removePhotoHandler,
         ILogger<LocationController> logger)
     {
         _createHandler = createHandler;
@@ -40,6 +50,9 @@ public class LocationController : ControllerBase
         _getByIdHandler = getByIdHandler;
         _getTopHandler = getTopHandler;
         _getLocationsHandler = getLocationsHandler;
+        _attachPhotoHandler = attachPhotoHandler;
+        _updatePhotoHandler = updatePhotoHandler;
+        _removePhotoHandler = removePhotoHandler;
         _logger = logger;
     }
 
@@ -142,5 +155,49 @@ public class LocationController : ControllerBase
         }
 
         return Ok(Envelope.Ok(result.Value));
+    }
+
+    [HttpPut("{locationId:guid}/attach-photo")]
+    public async Task<IActionResult> AttachPhotoToLocation(
+        [FromRoute] Guid locationId,
+        AttachPhotoRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new AttachPhotoCommand(locationId, request);
+
+        var response = await _attachPhotoHandler.HandleAsync(command, cancellationToken);
+        if (response.IsFailure)
+            return response.Error.ToResponse();
+        
+        return Ok(Envelope.Ok(response.Value));
+    }
+    
+    [HttpPut("{locationId:guid}/update-photo")]
+    public async Task<IActionResult> UpdatePhotoAsset(
+        [FromRoute] Guid locationId,
+        UpdatePhotoRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new UpdatePhotoCommand(locationId, request);
+
+        var response = await _updatePhotoHandler.HandleAsync(command, cancellationToken);
+        if (response.IsFailure)
+            return response.Error.ToResponse();
+
+        return Ok(Envelope.Ok(response.Value));
+    }
+    
+    [HttpPut("{locationId:guid}/remove-photo")]
+    public async Task<IActionResult> RemovePhotoAsset(
+        [FromRoute] Guid locationId,
+        CancellationToken cancellationToken)
+    {
+        var command = new RemovePhotoCommand(locationId);
+
+        var response = await _removePhotoHandler.HandleAsync(command, cancellationToken);
+        if (response.IsFailure)
+            return response.Error.ToResponse();
+        
+        return Ok(Envelope.Ok(response.Value));
     }
 }

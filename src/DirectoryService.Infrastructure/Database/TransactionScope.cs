@@ -1,6 +1,6 @@
 ﻿using System.Data;
+using Core.Database;
 using CSharpFunctionalExtensions;
-using DirectoryService.Application.Abstractions.Database;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
 

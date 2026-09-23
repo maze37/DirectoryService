@@ -1,5 +1,4 @@
 ﻿using DirectoryService.Contracts.Constants;
-using DirectoryService.Domain;
 using DirectoryService.Domain.Location;
 using DirectoryService.Domain.Location.ValueObjects;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +21,10 @@ public class LocationConfigurations : IEntityTypeConfiguration<Location>
             .HasColumnName("name")
             .IsRequired()
             .HasMaxLength(LocationName.MAX_NAME_LENGHT);
+
+        builder.Property(l => l.PhotoAssetId)
+            .IsRequired(false)
+            .HasColumnName("photo_asset_id");
         
         builder.ComplexProperty(l => l.Address, addrBuilder =>
         {
