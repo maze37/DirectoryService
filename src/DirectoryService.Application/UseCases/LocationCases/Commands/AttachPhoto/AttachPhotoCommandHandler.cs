@@ -40,7 +40,7 @@ public class AttachPhotoCommandHandler : ICommandHandler<AttachPhotoCommand, Att
         if (locationResult.IsFailure)
             return locationResult.Error;
 
-        var existsResult = await _fileCommunicationService.CheckMediaAssetExists(
+        var existsResult = await _fileCommunicationService.CheckMediaAssetExistsAndReady(
             command.Request.PhotoAssetId, 
             cancellationToken);
 
@@ -49,6 +49,9 @@ public class AttachPhotoCommandHandler : ICommandHandler<AttachPhotoCommand, Att
 
         if (!existsResult.Value.AssetExists)
             return Error.NotFound();
+        
+        if (!existsResult.Value.IsReady)
+            return Error.Validation("photo.asset.not_ready", "Файл ещё не готов к использованию");
 
         var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transaction.IsFailure)

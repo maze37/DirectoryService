@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Mazeland.Core" Version="2.0.2" />
-    <PackageVersion Include="Mazeland.FileService.Contracts" Version="1.0.1" />
+    <PackageVersion Include="Mazeland.FileService.Contracts" Version="1.0.2" />
     <PackageVersion Include="Mazeland.Framework" Version="2.0.2" />
     <PackageVersion Include="Mazeland.SharedKernel" Version="2.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.6" />

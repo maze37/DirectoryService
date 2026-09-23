@@ -41,7 +41,7 @@ public class UpdatePhotoCommandHandler : ICommandHandler<UpdatePhotoCommand, Upd
         if (locationResult.IsFailure)
             return locationResult.Error;
 
-        var existsResult = await _fileCommunicationService.CheckMediaAssetExists(
+        var existsResult = await _fileCommunicationService.CheckMediaAssetExistsAndReady(
             command.Request.NewPhotoAssetId, 
             cancellationToken);
 
@@ -50,6 +50,9 @@ public class UpdatePhotoCommandHandler : ICommandHandler<UpdatePhotoCommand, Upd
 
         if (!existsResult.Value.AssetExists)
             return Error.NotFound();
+        
+        if (!existsResult.Value.IsReady)
+            return Error.Validation("photo.asset.not_ready", "Файл ещё не готов к использованию");
 
         var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transaction.IsFailure)
