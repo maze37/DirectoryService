@@ -14,7 +14,7 @@ public static class Inject
     {
         services
             .AddInfrastructure(configuration)
-            .AddApplication()
+            .AddApplication(configuration)
             .AddSwaggerGen()
             .AddEndpointsApiExplorer()
             .AddControllers();

@@ -1,6 +1,10 @@
 using System.Reflection;
 using Core.Abstractions;
+using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Services;
+using FileService.Contracts.HttpCommunication;
 using FluentValidation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DirectoryService.Application;
@@ -8,7 +12,8 @@ namespace DirectoryService.Application;
 public static class Inject
 {
     public static IServiceCollection AddApplication(
-        this IServiceCollection services)
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
         var assembly = Assembly.GetExecutingAssembly();
 
@@ -30,6 +35,10 @@ public static class Inject
             .WithTransientLifetime());
 
         services.AddValidatorsFromAssembly(typeof(Inject).Assembly);
+        
+        services.AddFileServiceHttpCommunication(configuration);
+        
+        services.AddScoped<ILocationMediaEnrichmentService, LocationMediaEnrichmentService>();
         
         return services;
     }

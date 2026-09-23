@@ -1,8 +1,8 @@
 using Core.Abstractions;
+using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
-using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
 using DirectoryService.Domain.Location.ValueObjects;

@@ -14,4 +14,5 @@ public record GetLocationDto
     public bool IsActive { get; init; }
     public DateTimeOffset CreatedWhen { get; init; }
     public DateTimeOffset UpdatedWhen { get; init; }
+    public MediaAssetDto MediaAssetDto { get; init; } = null!;
 }

@@ -18,6 +18,11 @@ public sealed class Location
     public LocationName Name { get; private set; } = null!;
     
     /// <summary>
+    /// Фото подразделения
+    /// </summary>
+    public Guid? PhotoAssetId { get; private set; }
+    
+    /// <summary>
     /// Адрес локации.
     /// </summary>
     public Address Address { get; private set; } = null!;
@@ -125,4 +130,22 @@ public sealed class Location
     }
     
     public void SetDeletedWhenForTest(DateTimeOffset value) => DeletedWhen = value;
+
+    public void AttachPhotoId(Guid photoAssetId)
+    {
+        PhotoAssetId = photoAssetId;
+        UpdatedWhen = DateTimeOffset.UtcNow;
+    }
+    
+    public void UpdatePhotoId(Guid newPhotoAssetId)
+    {
+        PhotoAssetId = newPhotoAssetId;
+        UpdatedWhen = DateTimeOffset.UtcNow;
+    }
+    
+    public void RemovePhotoId()
+    {
+        PhotoAssetId = null;
+        UpdatedWhen = DateTimeOffset.UtcNow;
+    }
 }
