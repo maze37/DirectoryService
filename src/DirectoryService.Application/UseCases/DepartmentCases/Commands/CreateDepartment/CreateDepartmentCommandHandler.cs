@@ -8,10 +8,12 @@ using DirectoryService.Domain.Department;
 using DirectoryService.Domain.DepartmentLocations;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 using Npgsql;
-using Serilog;
 using SharedKernel;
 using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
+using ILogger = Serilog.ILogger;
 
 namespace DirectoryService.Application.UseCases.DepartmentCases.Commands.CreateDepartment;
 
@@ -21,16 +23,18 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
     private readonly ILocationRepository _locationRepository;
     private readonly ITransactionManager _transactionManager;
     private readonly IDateTimeProvider _dateTime;
-    private readonly ILogger _logger;
+    private readonly ILogger<CreateDepartmentCommandHandler> _logger;
     private readonly IValidator<CreateDepartmentCommand> _validator;
+    private readonly HybridCache _cache;
 
     public CreateDepartmentCommandHandler(
         IDepartmentRepository departmentRepository,
         ILocationRepository locationRepository,
         ITransactionManager transactionManager,
         IDateTimeProvider dateTime,
-        ILogger logger,
-        IValidator<CreateDepartmentCommand> validator)
+        ILogger<CreateDepartmentCommandHandler> logger,
+        IValidator<CreateDepartmentCommand> validator,
+        HybridCache cache)
     {
         _departmentRepository = departmentRepository;
         _locationRepository = locationRepository;
@@ -38,6 +42,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         _dateTime = dateTime;
         _logger = logger;
         _validator = validator;
+        _cache = cache;
     }
 
     public async Task<Result<CreateDepartmentResponse, Error>> HandleAsync(
@@ -136,7 +141,16 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         if (commitResult.IsFailure)
             return commitResult.Error;
         
-        _logger.Information("Отдел {Name} создан", command.Request.Name);
+        try
+        {
+            await _cache.RemoveByTagAsync("departments-tree", cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Не удалось сбросить кэш дерева подразделений");
+        }
+        
+        _logger.LogInformation("Отдел {Name} создан", command.Request.Name);
         return new CreateDepartmentResponse(departmentResult.Value.Id);
     }
 }
