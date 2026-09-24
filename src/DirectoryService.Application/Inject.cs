@@ -4,6 +4,7 @@ using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Services;
 using FileService.Contracts.HttpCommunication;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -39,6 +40,20 @@ public static class Inject
         services.AddFileServiceHttpCommunication(configuration);
         
         services.AddScoped<ILocationMediaEnrichmentService, LocationMediaEnrichmentService>();
+        
+        services.AddStackExchangeRedisCache(setup =>
+        {
+            setup.Configuration = configuration.GetConnectionString("Redis");
+        });
+        
+        services.AddHybridCache(options =>
+        {
+            options.DefaultEntryOptions = new HybridCacheEntryOptions()
+            {
+                LocalCacheExpiration = TimeSpan.FromMinutes(5),
+                Expiration = TimeSpan.FromMinutes(30)
+            };
+        });
         
         return services;
     }

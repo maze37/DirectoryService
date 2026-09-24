@@ -47,6 +47,13 @@ services:
       - default
       - shared-network
 
+  redis:
+    container_name: redis-ds
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
 volumes:
   postgres-data:
     name: directoryservice-postgres-data
