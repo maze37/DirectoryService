@@ -6,6 +6,7 @@ using DirectoryService.Application.Abstractions;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department;
 using FluentValidation;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
 using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
@@ -19,19 +20,22 @@ public class MoveDepartmentCommandHandler : ICommandHandler<MoveDepartmentComman
     private readonly IDateTimeProvider _dateTime;
     private readonly ILogger<MoveDepartmentCommandHandler> _logger;
     private readonly IValidator<MoveDepartmentCommand> _validator;
+    private readonly HybridCache _cache;
 
     public MoveDepartmentCommandHandler(
         IDepartmentRepository departmentRepository,
         ITransactionManager transactionManager,
         IDateTimeProvider dateTime,
         ILogger<MoveDepartmentCommandHandler> logger,
-        IValidator<MoveDepartmentCommand> validator)
+        IValidator<MoveDepartmentCommand> validator,
+        HybridCache cache)
     {
         _departmentRepository = departmentRepository;
         _transactionManager = transactionManager;
         _dateTime = dateTime;
         _logger = logger;
         _validator = validator;
+        _cache = cache;
     }
 
     public async Task<Result<MoveDepartmentResponse, Error>> HandleAsync(
@@ -121,6 +125,15 @@ public class MoveDepartmentCommandHandler : ICommandHandler<MoveDepartmentComman
         var commitResult = transactionScope.Commit();
         if (commitResult.IsFailure)
             return commitResult.Error;
+        
+        try
+        {
+            await _cache.RemoveByTagAsync("departments-tree", cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Не удалось сбросить кэш дерева подразделений");
+        }
 
         _logger.LogInformation("Подразделение {DepartmentId} перенесено в {NewParentId}",
             department.Id, newParent?.Id);
