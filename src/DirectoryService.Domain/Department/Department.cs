@@ -12,14 +12,35 @@ namespace DirectoryService.Domain.Department;
 /// </summary>
 public sealed class Department
 {
+    /// <summary>
+    /// Изменяемые связи подразделения с локациями.
+    /// </summary>
     private readonly List<DepartmentLocation> _departmentLocations = [];
+    /// <summary>
+    /// Изменяемые связи подразделения с должностями.
+    /// </summary>
     private readonly List<DepartmentPosition> _departmentPositions = [];
+    /// <summary>
+    /// Загруженные дочерние подразделения.
+    /// </summary>
     private readonly List<Department> _childrenDepartments  = [];
     
+    /// <summary>
+    /// Связи подразделения с локациями, доступные только для чтения.
+    /// </summary>
     public IReadOnlyList<DepartmentLocation> Locations => _departmentLocations.AsReadOnly();
+    /// <summary>
+    /// Связи подразделения с должностями, доступные только для чтения.
+    /// </summary>
     public IReadOnlyList<DepartmentPosition> Positions => _departmentPositions.AsReadOnly();
+    /// <summary>
+    /// Загруженные дочерние подразделения, доступные только для чтения.
+    /// </summary>
     public IReadOnlyList<Department> Children => _childrenDepartments.AsReadOnly();
     
+    /// <summary>
+    /// Идентификатор сущности.
+    /// </summary>
     public Guid Id { get; private set; }
     
     /// <summary>
@@ -38,12 +59,12 @@ public sealed class Department
     public Guid? ParentId { get; private set; }
     
     /// <summary>
-    /// Путь 
+    /// Путь подразделения в иерархии от корня.
     /// </summary>
     public Path Path { get; private set; } = null!;
     
     /// <summary>
-    /// Гоубина подразделения
+    /// Глубина подразделения в иерархии; у корня равна нулю.
     /// </summary>
     public int Depth { get; private set; }
 
@@ -82,10 +103,19 @@ public sealed class Department
     /// </summary>
     public DateTimeOffset UpdatedWhen { get; private set; }
     
+    /// <summary>
+    /// Версия записи для контроля конкурентных изменений.
+    /// </summary>
     public long Version { get; private set; }
 
+    /// <summary>
+    /// Конструктор для восстановления объекта средствами EF Core.
+    /// </summary>
     private Department() { }
 
+    /// <summary>
+    /// Инициализирует объект переданными значениями без дополнительных проверок.
+    /// </summary>
     public Department(
         Guid id,
         DepartmentName departmentName,
@@ -115,6 +145,9 @@ public sealed class Department
         _departmentPositions = departmentPositions.ToList();
     }
 
+    /// <summary>
+    /// Создаёт корневое подразделение без родителя с глубиной ноль после проверки ID, имени и slug.
+    /// </summary>
     public static Result<Department, Error> CreateRoot(
         Guid id,
         string name,
@@ -150,6 +183,9 @@ public sealed class Department
             departmentPositions: new List<DepartmentPosition>());
     }
 
+    /// <summary>
+    /// Создаёт дочернее подразделение с путём и глубиной, вычисленными относительно родителя.
+    /// </summary>
     public static Result<Department, Error> CreateChild(
         Guid id,
         string name,
@@ -185,6 +221,9 @@ public sealed class Department
             departmentPositions: new List<DepartmentPosition>());
     }
 
+    /// <summary>
+    /// Заменяет связи с локациями и обновляет время изменения подразделения.
+    /// </summary>
     public void UpdateLocations(List<DepartmentLocation> newLocations, DateTimeOffset updatedWhen)
     {
         _departmentLocations.Clear();
@@ -192,29 +231,44 @@ public sealed class Department
         UpdatedWhen = updatedWhen;
     }
     
+    /// <summary>
+    /// Увеличивает число дочерних подразделений и обновляет время изменения.
+    /// </summary>
     public void IncrementChildrenCount(DateTimeOffset updatedWhen)
     {
         ChildrenCount++;
         UpdatedWhen = updatedWhen;
     }
 
+    /// <summary>
+    /// Уменьшает число дочерних подразделений без проверки нижней границы и обновляет время изменения.
+    /// </summary>
     public void DecrementChildrenCount(DateTimeOffset updatedWhen)
     {
         ChildrenCount--;
         UpdatedWhen = updatedWhen;
     }
 
+    /// <summary>
+    /// Помечает сущность удалённой и сохраняет время удаления, не удаляя запись физически.
+    /// </summary>
     public void SoftDelete(DateTimeOffset deletedWhen)
     {
         IsDeleted = true;
         DeletedWhen = deletedWhen;
     }
     
+    /// <summary>
+    /// Снимает признак мягкого удаления и очищает время удаления.
+    /// </summary>
     public void Restore()
     {
         IsDeleted = false;
         DeletedWhen = null;
     }
     
+    /// <summary>
+    /// Задаёт время удаления для тестовых сценариев фоновой очистки.
+    /// </summary>
     public void SetDeletedWhenForTest(DateTimeOffset value) => DeletedWhen = value;
 }

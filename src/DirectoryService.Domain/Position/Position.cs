@@ -11,6 +11,9 @@ namespace DirectoryService.Domain.Position;
 /// </summary>
 public sealed class Position
 {
+    /// <summary>
+    /// Идентификатор сущности.
+    /// </summary>
     public Guid Id { get; private set; }
     
     /// <summary>
@@ -53,11 +56,20 @@ public sealed class Position
     /// </summary>
     public IReadOnlyList<DepartmentPosition> DepartmentPosition { get; private set; } = null!;
     
+    /// <summary>
+    /// Версия записи для контроля конкурентных изменений.
+    /// </summary>
     public long Version { get; private set; }
     
     // EF Core
+    /// <summary>
+    /// Конструктор для восстановления объекта средствами EF Core.
+    /// </summary>
     private Position() { }
 
+    /// <summary>
+    /// Инициализирует объект переданными значениями без дополнительных проверок.
+    /// </summary>
     private Position(
         Guid id,
         PositionName name,
@@ -74,6 +86,9 @@ public sealed class Position
         DepartmentPosition = departmentPositions;
     }
     
+    /// <summary>
+    /// Проверяет ID, название и длину описания, затем создаёт должность с переданными связями.
+    /// </summary>
     public static Result<Position, Error> Create(
         Guid id,
         string name,
@@ -109,17 +124,26 @@ public sealed class Position
         UpdatedWhen = dateTime;
     }
 
+    /// <summary>
+    /// Помечает сущность удалённой и сохраняет время удаления, не удаляя запись физически.
+    /// </summary>
     public void SoftDelete(DateTimeOffset deletedWhen)
     {
         IsDeleted = true;
         DeletedWhen = deletedWhen;
     }
     
+    /// <summary>
+    /// Снимает признак мягкого удаления и очищает время удаления.
+    /// </summary>
     public void Restore()
     {
         IsDeleted = false;
         DeletedWhen = null;
     }
     
+    /// <summary>
+    /// Задаёт время удаления для тестовых сценариев фоновой очистки.
+    /// </summary>
     public void SetDeletedWhenForTest(DateTimeOffset value) => DeletedWhen = value;
 }

@@ -10,6 +10,9 @@ namespace DirectoryService.Domain.Location;
 /// </summary>
 public sealed class Location
 {
+    /// <summary>
+    /// Идентификатор сущности.
+    /// </summary>
     public Guid Id { get; private set; }
     
     /// <summary>
@@ -18,7 +21,7 @@ public sealed class Location
     public LocationName Name { get; private set; } = null!;
     
     /// <summary>
-    /// Фото подразделения
+    /// Идентификатор фотографии локации в FileService.
     /// </summary>
     public Guid? PhotoAssetId { get; private set; }
     
@@ -62,11 +65,20 @@ public sealed class Location
     /// </summary>
     public IReadOnlyList<DepartmentLocation> DepartmentLocations { get; private set; } = null!;
     
+    /// <summary>
+    /// Версия записи для контроля конкурентных изменений.
+    /// </summary>
     public long Version { get; private set; }
     
     // EF Core
+    /// <summary>
+    /// Конструктор для восстановления объекта средствами EF Core.
+    /// </summary>
     private Location() { }
 
+    /// <summary>
+    /// Инициализирует объект переданными значениями без дополнительных проверок.
+    /// </summary>
     private Location(
         Guid id,
         LocationName name,
@@ -85,6 +97,9 @@ public sealed class Location
         IsDeleted = isDeleted;
     }
     
+    /// <summary>
+    /// Проверяет ID, название, адрес и часовой пояс, затем создаёт локацию.
+    /// </summary>
     public static Result<Location, Error> Create(
         Guid id,
         string name,
@@ -117,32 +132,50 @@ public sealed class Location
             isDeleted);
     }
     
+    /// <summary>
+    /// Помечает сущность удалённой и сохраняет время удаления, не удаляя запись физически.
+    /// </summary>
     public void SoftDelete(DateTimeOffset deletedWhen)
     {
         IsDeleted = true;
         DeletedWhen = deletedWhen;
     }
     
+    /// <summary>
+    /// Снимает признак мягкого удаления и очищает время удаления.
+    /// </summary>
     public void Restore()
     {
         IsDeleted = false;
         DeletedWhen = null;
     }
     
+    /// <summary>
+    /// Задаёт время удаления для тестовых сценариев фоновой очистки.
+    /// </summary>
     public void SetDeletedWhenForTest(DateTimeOffset value) => DeletedWhen = value;
 
+    /// <summary>
+    /// Записывает ID фотографии и обновляет время изменения; готовность ассета проверяет application-сценарий.
+    /// </summary>
     public void AttachPhotoId(Guid photoAssetId)
     {
         PhotoAssetId = photoAssetId;
         UpdatedWhen = DateTimeOffset.UtcNow;
     }
     
+    /// <summary>
+    /// Заменяет ID фотографии и обновляет время изменения без обращения к FileService.
+    /// </summary>
     public void UpdatePhotoId(Guid newPhotoAssetId)
     {
         PhotoAssetId = newPhotoAssetId;
         UpdatedWhen = DateTimeOffset.UtcNow;
     }
     
+    /// <summary>
+    /// Удаляет ссылку на фотографию и обновляет время изменения, не удаляя сам файл.
+    /// </summary>
     public void RemovePhotoId()
     {
         PhotoAssetId = null;
