@@ -1,4 +1,3 @@
-using Core.Database;
 using DirectoryService.Application.Abstractions;
 using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Infrastructure.BackgroundServices.Cleanup;
@@ -19,9 +18,9 @@ public static class Inject
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>((sp, options) =>
+        services.AddDbContext<DirectoryServiceDbContext>((sp, options) =>
         {
-            var connectionString = configuration.GetConnectionString("DirectoryServiceDb");
+            var connectionString = configuration.GetConnectionString("Database");
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
 
             options.UseNpgsql(connectionString);
@@ -30,12 +29,12 @@ public static class Inject
         });
 
         // Для EFCore
-        services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+        services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<DirectoryServiceDbContext>());
         
         // Для Dapper
         services.AddSingleton<IDbConnectionFactory>(sp =>
         {
-            var connectionString = configuration.GetConnectionString("DirectoryServiceDb")!;
+            var connectionString = configuration.GetConnectionString("Database")!;
             return new NpgsqlConnectionFactory(connectionString);
         });
         
@@ -49,6 +48,7 @@ public static class Inject
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
+        services.AddScoped<IAssetStateRepository, AssetStateRepository>();
         
         services.AddHostedService<CleanupDepartmentsService>();
         services.AddHostedService<CleanupLocationsService>();

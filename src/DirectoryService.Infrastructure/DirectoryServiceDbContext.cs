@@ -1,4 +1,5 @@
 ﻿using DirectoryService.Application.Abstractions.Database;
+using DirectoryService.Application.ReadModels;
 using DirectoryService.Domain.Department;
 using DirectoryService.Domain.DepartmentLocations;
 using DirectoryService.Domain.DepartmentPositions;
@@ -8,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DirectoryService.Infrastructure;
 
-public class AppDbContext : DbContext, IReadDbContext
+public class DirectoryServiceDbContext : DbContext, IReadDbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public DirectoryServiceDbContext(DbContextOptions<DirectoryServiceDbContext> options) : base(options) { }
     
     // Для изменения состояния.
     public DbSet<Department> Departments { get; set; }
@@ -18,6 +19,8 @@ public class AppDbContext : DbContext, IReadDbContext
     public DbSet<Position> Positions { get; set; }
     public DbSet<DepartmentLocation> DepartmentLocations { get; set; }
     public DbSet<DepartmentPosition> DepartmentPositions { get; set; }
+
+    public DbSet<AssetState> AssetStates => Set<AssetState>();
 
     // Для чтения.
     public IQueryable<Department> DepartmentsRead => Set<Department>().AsQueryable().AsNoTracking();
@@ -34,7 +37,7 @@ public class AppDbContext : DbContext, IReadDbContext
         modelBuilder.HasPostgresExtension("ltree");
 
         modelBuilder.ApplyConfigurationsFromAssembly(
-            typeof(AppDbContext).Assembly);
+            typeof(DirectoryServiceDbContext).Assembly);
         
         modelBuilder.Entity<Department>().HasQueryFilter(d => d.IsDeleted == false);
         modelBuilder.Entity<Location>().HasQueryFilter(l => l.IsDeleted == false);

@@ -1,8 +1,8 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.DepartmentContracts;
 using FluentValidation;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -45,22 +45,18 @@ public class DeleteDepartmentCommandHandler : ICommandHandler<DeleteDepartmentCo
         if (!validationResult.IsValid)
             return validationResult.ToError();
     
-        var transactionResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
-        if (transactionResult.IsFailure)
-            return transactionResult.Error;
-
-        using var transactionScope = transactionResult.Value;
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
+            return transaction.Error;
 
         var departmentResult = await _departmentRepository.GetByIdWithLock(command.Id, cancellationToken);
         if (departmentResult.IsFailure)
         {
-            transactionScope.Rollback();
             return departmentResult.Error;
         }
 
         if (departmentResult.Value.ChildrenCount > 0) 
         {
-            transactionScope.Rollback();
             return Error.Validation(
                 "department.has.children", 
                 "Нельзя удалить подразделение, у которого есть дочерние элементы. Сначала удалите их.");
@@ -68,14 +64,7 @@ public class DeleteDepartmentCommandHandler : ICommandHandler<DeleteDepartmentCo
         
         departmentResult.Value.SoftDelete(_dateTime.UtcNow);
 
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return saveResult.Error;
-        }
-
-        var commitResult = transactionScope.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
         

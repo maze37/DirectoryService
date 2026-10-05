@@ -1,9 +1,9 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.LocationContracts;
-using FileService.Contracts.HttpCommunication;
+using DirectoryService.Application.ReadModels;
 using Microsoft.Extensions.Logging;
 using SharedKernel;
 
@@ -14,18 +14,18 @@ public class AttachPhotoCommandHandler : ICommandHandler<AttachPhotoCommand, Att
     private readonly ILocationRepository _locationRepository;
     private readonly ITransactionManager _transactionManager;
     private readonly ILogger<AttachPhotoCommandHandler> _logger;
-    private readonly IFileCommunicationService _fileCommunicationService;
+    private readonly IAssetStateRepository _assetStateRepository;
 
     public AttachPhotoCommandHandler(
         ILocationRepository locationRepository,
         ITransactionManager transactionManager,
         ILogger<AttachPhotoCommandHandler> logger,
-        IFileCommunicationService fileCommunicationService)
+        IAssetStateRepository assetStateRepository)
     {
         _locationRepository = locationRepository;
         _transactionManager = transactionManager;
         _logger = logger;
-        _fileCommunicationService = fileCommunicationService;
+        _assetStateRepository = assetStateRepository;
     }
 
     public async Task<Result<AttachPhotoResponse, Error>> HandleAsync(
@@ -40,32 +40,31 @@ public class AttachPhotoCommandHandler : ICommandHandler<AttachPhotoCommand, Att
         if (locationResult.IsFailure)
             return locationResult.Error;
 
-        var existsResult = await _fileCommunicationService.CheckMediaAssetExistsAndReady(
-            command.Request.PhotoAssetId, 
-            cancellationToken);
+        var asset = await _assetStateRepository.GetByIdAsync(
+            command.Request.PhotoAssetId, cancellationToken);
 
-        if (existsResult.IsFailure)
-            return existsResult.Error;
+        if (asset is null)
+            return Error.Conflict("photo.asset.state_unknown",
+                "Готовность файла ещё не подтверждена. Повторите попытку позже");
 
-        if (!existsResult.Value.AssetExists)
-            return Error.NotFound();
-        
-        if (!existsResult.Value.IsReady)
-            return Error.Validation("photo.asset.not_ready", "Файл ещё не готов к использованию");
+        if (asset.Status == AssetStatus.Deleted)
+            return Error.Conflict("photo.asset.deleted", "Файл удалён");
+
+        if (asset.Status != AssetStatus.Ready)
+            return Error.Conflict("photo.asset.not_ready", "Файл ещё не готов к использованию");
+
+        if (asset.EntityId != command.LocationId ||
+            !string.Equals(asset.EntityType, "location", StringComparison.OrdinalIgnoreCase))
+            return Error.Validation("photo.asset.owner_mismatch",
+                "Файл не принадлежит этой локации");
 
         var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
         if (transaction.IsFailure)
             return transaction.Error;
 
-        using var transactionScope = transaction.Value;
-
         locationResult.Value.AttachPhotoId(command.Request.PhotoAssetId);
 
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-            return saveResult.Error;
-
-        var commitResult = transactionScope.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
 

@@ -1,8 +1,8 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.DepartmentLocations;
 using FluentValidation;
@@ -48,22 +48,18 @@ public class UpdateDepartmentLocationsCommandHandler :
             return validationResult.ToError();
 
         // Открываем транзакцию
-        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
-        if (transactionScopeResult.IsFailure)
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
         {
-            return transactionScopeResult.Error;
+            return transaction.Error;
         }
 
-        // using - вызвать dispose, тк IDispose есть у TransactionScope
-        using var transactionScope = transactionScopeResult.Value;
-        
         // Проверяем - существует ли подразделение
         // Песеммистичная блокировка - А должен коммитнуть, только потом возьмется за свежие данные B
         var departmentResult = await _departmentRepository.GetByIdWithLock(
             command.DepartmentId, cancellationToken);
         if (departmentResult.IsFailure)
         {
-            transactionScope.Rollback();
             return departmentResult.Error;
         }
         
@@ -86,18 +82,11 @@ public class UpdateDepartmentLocationsCommandHandler :
         
         await _departmentRepository.UpdateLocationsAsync(department, cancellationToken);
 
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return saveResult.Error;
-        }
-        
         // Закрываем транзакцию и параллельно проверяем успешность сохранения
-        var commitedResult = transactionScope.Commit();
-        if (commitedResult.IsFailure)
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
+        if (commitResult.IsFailure)
         {
-            return commitedResult.Error;
+            return commitResult.Error;
         }
         
         _logger.Information(

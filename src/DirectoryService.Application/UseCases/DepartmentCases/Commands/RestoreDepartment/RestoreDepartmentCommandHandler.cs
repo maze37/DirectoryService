@@ -1,8 +1,8 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.DepartmentContracts;
 using FluentValidation;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -42,16 +42,13 @@ public class RestoreDepartmentCommandHandler : ICommandHandler<RestoreDepartment
         if (!validationResult.IsValid)
             return validationResult.ToError();
 
-        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
-        if (transactionScopeResult.IsFailure)
-            return transactionScopeResult.Error;
-        
-        using var transactionScope = transactionScopeResult.Value;
-        
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
+            return transaction.Error;
+
         var departmentResult = await _departmentRepository.GetDeletedByIdWithLock(command.DepartmentId, cancellationToken);
         if (departmentResult.IsFailure)
         {
-            transactionScope.Rollback();
             return departmentResult.Error;
         }
         
@@ -59,14 +56,7 @@ public class RestoreDepartmentCommandHandler : ICommandHandler<RestoreDepartment
         
         department.Restore();
         
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return saveResult.Error;
-        }
-
-        var commitResult = transactionScope.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
         

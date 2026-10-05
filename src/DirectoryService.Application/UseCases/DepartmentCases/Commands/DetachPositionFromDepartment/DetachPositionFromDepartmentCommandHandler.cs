@@ -1,8 +1,8 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.DepartmentContracts;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
@@ -42,11 +42,9 @@ public class DetachPositionFromDepartmentCommandHandler :
         if (!validationResult.IsValid)
             return validationResult.ToError();
 
-        var transactionResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
-        if (transactionResult.IsFailure)
-            return transactionResult.Error;
-
-        using var transaction = transactionResult.Value;
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
+            return transaction.Error;
 
         var linkResult = await _departmentRepository
             .GetPositionLinkAsync(command.DepartmentId, command.PositionId, cancellationToken);
@@ -55,14 +53,7 @@ public class DetachPositionFromDepartmentCommandHandler :
 
         _departmentRepository.RemovePositionLink(linkResult.Value);
 
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-        {
-            transaction.Rollback();
-            return saveResult.Error;
-        }
-
-        var commitResult = transaction.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
 

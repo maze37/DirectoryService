@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DirectoryService.Infrastructure.Migrations
 {
     [DbContext(typeof(DirectoryServiceDbContext))]
-    [Migration("20260813224758_FixIsDeletedNotNull")]
-    partial class FixIsDeletedNotNull
+    [Migration("20261005112539_AddAssetStates")]
+    partial class AddAssetStates
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,6 +26,43 @@ namespace DirectoryService.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "ltree");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("DirectoryService.Application.ReadModels.AssetState", b =>
+                {
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("asset_id");
+
+                    b.Property<string>("AssetType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("asset_type");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("entity_type");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("AssetId");
+
+                    b.ToTable("asset_states", "public", t =>
+                        {
+                            t.HasCheckConstraint("ck_asset_states_status", "status IN ('Ready', 'Deleted')");
+                        });
+                });
 
             modelBuilder.Entity("DirectoryService.Domain.Department.Department", b =>
                 {
@@ -130,7 +167,8 @@ namespace DirectoryService.Infrastructure.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("LocationId");
+                    b.HasIndex("LocationId")
+                        .HasDatabaseName("ix_department_locations_location_id");
 
                     b.ToTable("department_locations", (string)null);
                 });
@@ -155,7 +193,8 @@ namespace DirectoryService.Infrastructure.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("PositionId");
+                    b.HasIndex("PositionId")
+                        .HasDatabaseName("ix_department_positions_position_id");
 
                     b.ToTable("department_positions", (string)null);
                 });
@@ -190,6 +229,10 @@ namespace DirectoryService.Infrastructure.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)")
                         .HasColumnName("name");
+
+                    b.Property<Guid?>("PhotoAssetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("photo_asset_id");
 
                     b.Property<string>("Timezone")
                         .IsRequired()

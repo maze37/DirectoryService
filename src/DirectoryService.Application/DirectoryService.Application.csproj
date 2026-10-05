@@ -10,6 +10,7 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Mazeland.Core" />
     <PackageReference Include="Mazeland.FileService.Contracts" />
+    <PackageReference Include="Mazeland.FileService.Shared.Messaging" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
@@ -19,6 +20,11 @@
     <PackageReference Include="Scrutor" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Serilog.Sinks.Seq" />
+    <PackageReference Include="WolverineFx.EntityFrameworkCore" />
+    <PackageReference Include="WolverineFx.Postgresql" />
+    <PackageReference Include="WolverineFx.RabbitMQ" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" />
   </ItemGroup>
 
 </Project>

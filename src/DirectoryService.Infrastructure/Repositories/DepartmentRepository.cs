@@ -12,9 +12,9 @@ namespace DirectoryService.Infrastructure.Repositories;
 
 public class DepartmentRepository : IDepartmentRepository
 {
-    private readonly AppDbContext _context;
+    private readonly DirectoryServiceDbContext _context;
 
-    public DepartmentRepository(AppDbContext context)
+    public DepartmentRepository(DirectoryServiceDbContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }

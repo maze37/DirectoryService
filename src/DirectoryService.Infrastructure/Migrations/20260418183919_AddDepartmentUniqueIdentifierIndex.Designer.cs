@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace DirectoryService.Infrastructure.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
+    [DbContext(typeof(DirectoryServiceDbContext))]
     [Migration("20260418183919_AddDepartmentUniqueIdentifierIndex")]
     partial class AddDepartmentUniqueIdentifierIndex
     {
