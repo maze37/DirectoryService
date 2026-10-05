@@ -1,7 +1,7 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts;
 using DirectoryService.Contracts.LocationContracts;
 using Microsoft.Extensions.Logging;
@@ -38,15 +38,9 @@ public class RemovePhotoCommandHandler : ICommandHandler<RemovePhotoCommand, Rem
         if (transaction.IsFailure)
             return transaction.Error;
 
-        using var transactionScope = transaction.Value;
-
         locationResult.Value.RemovePhotoId();
 
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-            return saveResult.Error;
-
-        var commitResult = transactionScope.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
 

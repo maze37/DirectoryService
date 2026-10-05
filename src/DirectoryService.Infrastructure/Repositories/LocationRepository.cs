@@ -10,9 +10,9 @@ namespace DirectoryService.Infrastructure.Repositories;
 
 public class LocationRepository : ILocationRepository
 {
-    private readonly AppDbContext _context;
+    private readonly DirectoryServiceDbContext _context;
     
-    public LocationRepository(AppDbContext context)
+    public LocationRepository(DirectoryServiceDbContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
     }

@@ -1,8 +1,8 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department;
 using FluentValidation;
@@ -48,11 +48,9 @@ public class MoveDepartmentCommandHandler : ICommandHandler<MoveDepartmentComman
             return validationResult.ToError();
 
         // 2. Открываем транзакцию
-        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
-        if (transactionScopeResult.IsFailure)
-            return transactionScopeResult.Error;
-
-        using var transactionScope = transactionScopeResult.Value;
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
+            return transaction.Error;
 
         // 3. Получаем перемещаемый отдел с блокировкой
         var departmentResult = await _departmentRepository.GetByIdWithLock(
@@ -118,11 +116,7 @@ public class MoveDepartmentCommandHandler : ICommandHandler<MoveDepartmentComman
         oldParent?.DecrementChildrenCount(_dateTime.UtcNow);
 
         // 9. Сохраняем и коммитим
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-            return saveResult.Error; // Dispose transactionScope сделает rollback
-
-        var commitResult = transactionScope.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
         

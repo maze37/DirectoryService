@@ -1,8 +1,8 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.PositionContracts;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
@@ -41,16 +41,13 @@ public class RestorePositionCommandHandler : ICommandHandler<RestorePositionComm
         if (!validationResult.IsValid)
             return validationResult.ToError();
 
-        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
-        if (transactionScopeResult.IsFailure)
-            return transactionScopeResult.Error;
-        
-        using var transactionScope = transactionScopeResult.Value;
-        
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
+            return transaction.Error;
+
         var positionResult = await _positionRepository.GetDeletedByIdWithLock(command.PositionId, cancellationToken);
         if (positionResult.IsFailure)
         {
-            transactionScope.Rollback();
             return positionResult.Error;
         }
         
@@ -58,14 +55,7 @@ public class RestorePositionCommandHandler : ICommandHandler<RestorePositionComm
         
         position.Restore();
         
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return saveResult.Error;
-        }
-
-        var commitResult = transactionScope.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
         

@@ -18,19 +18,20 @@ services:
   seq:
     container_name: seq-ds
     image: datalust/seq:latest
+    restart: always
     environment:
       ACCEPT_EULA: "Y"
       SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
     ports:
       - "8081:80"
-    restart: always
 
   redis:
     container_name: redis-ds
     image: redis:alpine
+    restart: always
     command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -39,7 +40,6 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
-    restart: always
 
   directory-service:
     build:
@@ -53,7 +53,9 @@ services:
       - "8002:8002"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DirectoryServiceDb: "Host=postgres;Port=5432;Database=directory_service_db;Username=postgres;Password=1234"
+      ASPNETCORE_URLS: "http://+:8002"
+      ConnectionStrings__Database: "Host=postgres;Port=5432;Database=directory_service_db;Username=postgres;Password=1234"
+      ConnectionStrings__RabbitMq: "amqp://guest:guest@platform-rabbitmq:5672"
       ConnectionStrings__Redis: "redis:6379"
       Serilog__WriteTo__1__Args__serverUrl: "http://seq:80"
       FileServiceOptions__Url: "http://file-service:8003"

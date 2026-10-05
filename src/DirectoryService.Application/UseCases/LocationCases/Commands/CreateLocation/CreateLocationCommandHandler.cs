@@ -1,8 +1,8 @@
 using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.LocationContracts;
 using DirectoryService.Domain.Location;
 using DirectoryService.Domain.Location.ValueObjects;
@@ -43,12 +43,10 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
         if (!validationResult.IsValid)
             return validationResult.ToError();
 
-        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
-        if (transactionScopeResult.IsFailure)
-            return transactionScopeResult.Error;
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
+            return transaction.Error;
 
-        using var transactionScope = transactionScopeResult.Value;
-        
         var address = Address.Create(command.Request.Address.Country,
             command.Request.Address.City,
             command.Request.Address.Street,
@@ -72,11 +70,7 @@ public class CreateLocationCommandHandler : ICommandHandler<CreateLocationComman
 
         _locationRepository.Add(locationResult.Value);
         
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-            return saveResult.Error;
-
-        var commitResult = transactionScope.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
 

@@ -1,81 +1,143 @@
-﻿using System.Data;
-using Core.Database;
+﻿using System.Data.Common;
 using CSharpFunctionalExtensions;
+using DirectoryService.Application.Abstractions.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using SharedKernel;
+using Wolverine.EntityFrameworkCore;
 
 namespace DirectoryService.Infrastructure.Database;
 
-/// <inheritdoc/>
-public class TransactionManager : ITransactionManager
+public class TransactionManager : ITransactionManager, IDisposable, IAsyncDisposable
 {
-    private readonly AppDbContext _context;
+    private readonly IDbContextOutbox<DirectoryServiceDbContext> _outbox;
     private readonly ILogger<TransactionManager> _logger;
-    private readonly ILoggerFactory _loggerFactory;
+
+    private IDbContextTransaction? _currentTransaction;
     
     public TransactionManager(
-        AppDbContext context, 
-        ILogger<TransactionManager> logger, 
-        ILoggerFactory loggerFactory)
+        IDbContextOutbox<DirectoryServiceDbContext> outbox, 
+        ILogger<TransactionManager> logger)
     {
-        _context = context;
+        _outbox = outbox;
         _logger = logger;
-        _loggerFactory = loggerFactory;
     }
-    
-    public async Task<UnitResult<Error>> SaveChangesAsync(CancellationToken cancellationToken)
+
+    public async Task<UnitResult<Error>> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            await _context.SaveChangesAsync(cancellationToken);
+            _currentTransaction = await _outbox.DbContext.Database.BeginTransactionAsync(cancellationToken);
+
             return UnitResult.Success<Error>();
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx)
-        {
-            if (pgEx.SqlState == PostgresErrorCodes.UniqueViolation)
-                return Error.Conflict(
-                    "record.already.exist",
-                    "Unique constraint violated",
-                    pgEx.ConstraintName);
-
-            return Error.Failure(
-                "db.update.failed",
-                "Database update failed");
-        }
-        // catch (DbUpdateException)
-        // {
-        //     return Error.Failure("db.update.failed", "Database update failed");
-        // }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogError(ex, "DbUpdateException: {Message}, Inner: {Inner}", 
-                ex.Message, ex.InnerException?.Message);
-            return Error.Failure("db.update.failed", "Database update failed");
-        }
-    }
-
-    public async Task<Result<ITransactionScope, Error>> BeginTransactionAsync(
-        CancellationToken cancellationToken = default,
-        IsolationLevel? level = null)
-    {
-        try
-        {
-            var transaction = await _context.Database
-                .BeginTransactionAsync(level ?? IsolationLevel.ReadCommitted, cancellationToken);
-
-            var logger = _loggerFactory.CreateLogger<TransactionScope>();
-            
-            var transactionScope = new TransactionScope(transaction.GetDbTransaction(), logger);
-            
-            return transactionScope;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to begin transaction");
-            return Error.Failure("database", "Failed to begin transaction");
+            return GeneralErrors.DatabaseError();
+        }
+    }
+    
+    public async Task<UnitResult<Error>> CommitTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (_currentTransaction is null)
+            return GeneralErrors.DatabaseError();
+
+        try
+        {
+            await _outbox.DbContext.SaveChangesAsync(cancellationToken);
+            await _currentTransaction.CommitAsync(cancellationToken);
+            await _outbox.FlushOutgoingMessagesAsync();
+            return UnitResult.Success<Error>();
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogError(ex, "Concurrency conflict during commit.");
+            await RollbackAsync(CancellationToken.None);
+            return GeneralErrors.ConcurrencyConflict();
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogError(ex, "Operation cancelled during commit.");
+            await RollbackAsync(CancellationToken.None);
+            return GeneralErrors.OperationCancelled();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during commit.");
+            await RollbackAsync(CancellationToken.None);
+            return GeneralErrors.DatabaseError();
+        }
+        finally
+        {
+            await DisposeTransactionAsync();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeTransactionAsync();
+    }
+
+    public void Dispose()
+    {
+        if (_currentTransaction is not null)
+        {
+            _currentTransaction.Dispose();
+            _currentTransaction = null;
+        }
+    }
+    
+    public DbConnection GetDbConnection() => _outbox.DbContext.Database.GetDbConnection();
+    
+    public async Task<UnitResult<Error>> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (_currentTransaction is not null)
+                await _outbox.DbContext.SaveChangesAsync(cancellationToken);
+            else
+                await _outbox.SaveChangesAndFlushMessagesAsync(cancellationToken);
+            
+            return UnitResult.Success<Error>();
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _logger.LogError(ex, "Concurrency conflict during save.");
+            return GeneralErrors.ConcurrencyConflict();
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogError(ex, "Operation cancelled during save.");
+            return GeneralErrors.OperationCancelled();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during save.");
+            return GeneralErrors.DatabaseError();
+        }
+    }
+    
+    private async Task RollbackAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (_currentTransaction is not null)
+                await _currentTransaction.RollbackAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to rollback transaction.");
+        }
+    }
+
+    private async Task DisposeTransactionAsync()
+    {
+        if (_currentTransaction is not null)
+        {
+            await _currentTransaction.DisposeAsync();
+            _currentTransaction = null;
         }
     }
 }

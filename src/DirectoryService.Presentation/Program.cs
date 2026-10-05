@@ -1,3 +1,4 @@
+using DirectoryService.Application.Messaging;
 using DirectoryService.Presentation.Configuration;
 using Serilog;
 
@@ -14,6 +15,8 @@ try
         .Enrich.WithProperty("ServiceName", "DirectoryService"));
 
     builder.Services.ConfigureApp(builder.Configuration);
+
+    builder.AddWolverine();
 
     var app = builder.Build();
 

@@ -1,8 +1,8 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.LocationContracts;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
@@ -41,16 +41,13 @@ public class RestoreLocationCommandHandler : ICommandHandler<RestoreLocationComm
         if (!validationResult.IsValid)
             return validationResult.ToError();
 
-        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
-        if (transactionScopeResult.IsFailure)
-            return transactionScopeResult.Error;
-        
-        using var transactionScope = transactionScopeResult.Value;
-        
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
+            return transaction.Error;
+
         var locationResult = await _locationRepository.GetDeletedByIdWithLock(command.LocationId, cancellationToken);
         if (locationResult.IsFailure)
         {
-            transactionScope.Rollback();
             return locationResult.Error;
         }
         
@@ -58,14 +55,7 @@ public class RestoreLocationCommandHandler : ICommandHandler<RestoreLocationComm
         
         location.Restore();
         
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-        {
-            transactionScope.Rollback();
-            return saveResult.Error;
-        }
-
-        var commitResult = transactionScope.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
         

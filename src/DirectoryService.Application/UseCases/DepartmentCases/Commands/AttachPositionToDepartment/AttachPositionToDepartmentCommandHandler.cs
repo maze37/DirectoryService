@@ -1,8 +1,8 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.DepartmentPositions;
 using FluentValidation;
@@ -43,11 +43,9 @@ public class AttachPositionToDepartmentCommandHandler :
         if (!validationResult.IsValid)
             return validationResult.ToError();
 
-        var transactionResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
-        if (transactionResult.IsFailure)
-            return transactionResult.Error;
-
-        using var transaction = transactionResult.Value;
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
+            return transaction.Error;
 
         var departmentResult = await _departmentRepository.GetByIdWithLock(
             command.DepartmentId, cancellationToken);
@@ -65,17 +63,10 @@ public class AttachPositionToDepartmentCommandHandler :
         var link = new DepartmentPosition(command.PositionId, command.DepartmentId);
         _departmentRepository.AddPositionLink(link);
 
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-        {
-            transaction.Rollback();
-            return saveResult.Error;
-        }
-
-        var commitResult = transaction.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
-
+        
         _logger.LogInformation("Должность {PositionId} привязана к подразделению {DepartmentId}",
             command.PositionId, command.DepartmentId);
 

@@ -1,8 +1,8 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.PositionContracts;
 using DirectoryService.Domain.DepartmentPositions;
 using DirectoryService.Domain.Position;
@@ -74,11 +74,15 @@ public class CreatePositionCommandHandler : ICommandHandler<CreatePositionComman
         if (positionResult.IsFailure)
             return positionResult.Error;
 
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
+            return transaction.Error;
+
         _positionRepository.Add(positionResult.Value);
 
-        var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-            return saveResult.Error;
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
+        if (commitResult.IsFailure)
+            return commitResult.Error;
 
         _logger.LogInformation("Должность {Name} создана", command.Request.Name);
         return new CreatePositionResponse(positionResult.Value.Id);

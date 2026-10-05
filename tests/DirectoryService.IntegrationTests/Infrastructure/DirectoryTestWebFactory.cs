@@ -29,15 +29,15 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
     {
         builder.ConfigureTestServices(services =>
         {
-            services.RemoveAll<DbContextOptions<AppDbContext>>();
-            services.AddDbContext<AppDbContext>(options =>
+            services.RemoveAll<DbContextOptions<DirectoryServiceDbContext>>();
+            services.AddDbContext<DirectoryServiceDbContext>(options =>
                 options.UseNpgsql(_dbContainer.GetConnectionString()));
 
             services.RemoveAll<IDbConnectionFactory>();
             services.AddSingleton<IDbConnectionFactory>(_ =>
                 new NpgsqlConnectionFactory(_dbContainer.GetConnectionString()));
 
-            services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+            services.AddScoped<IReadDbContext>(sp => sp.GetRequiredService<DirectoryServiceDbContext>());
         });
     }
 
@@ -46,7 +46,7 @@ public class DirectoryTestWebFactory : WebApplicationFactory<Program>, IAsyncLif
         await _dbContainer.StartAsync();
 
         await using var scope = Services.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DirectoryServiceDbContext>();
 
         await dbContext.Database.EnsureDeletedAsync();
         await dbContext.Database.EnsureCreatedAsync();

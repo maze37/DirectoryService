@@ -1,16 +1,14 @@
 ﻿using Core.Abstractions;
-using Core.Database;
 using Core.Validation;
 using CSharpFunctionalExtensions;
 using DirectoryService.Application.Abstractions;
+using DirectoryService.Application.Abstractions.Database;
 using DirectoryService.Contracts.DepartmentContracts;
 using DirectoryService.Domain.Department;
 using DirectoryService.Domain.DepartmentLocations;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using SharedKernel;
 using IDateTimeProvider = DirectoryService.Application.Abstractions.IDateTimeProvider;
 using ILogger = Serilog.ILogger;
@@ -53,12 +51,10 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         if (validationResult.IsValid == false)
             return validationResult.ToError();
 
-        var transactionScopeResult = await _transactionManager.BeginTransactionAsync(cancellationToken);
-        if (transactionScopeResult.IsFailure)
-            return transactionScopeResult.Error;
+        var transaction = await _transactionManager.BeginTransactionAsync(cancellationToken);
+        if (transaction.IsFailure)
+            return transaction.Error;
 
-        using var transactionScope = transactionScopeResult.Value;
-        
         bool locationExists = await _locationRepository
             .AllExistAsync(command.Request.LocationIds, cancellationToken);
         if (!locationExists)
@@ -66,7 +62,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
 
         // Для несуществующих строк в бд FOR UPDATE не сработает.
         // Для красоты стоит, но есть уникальный индекс в бд который спасает от race condition.
-        var identifierExists = await _departmentRepository
+        bool identifierExists = await _departmentRepository
             .ExistsBySlugWithLockAsync(command.Request.Slug, cancellationToken);
         if (identifierExists)
             return Error.Conflict("department.identifier.taken", "Отдел с таким идентификатором уже существует");
@@ -118,26 +114,7 @@ public class CreateDepartmentCommandHandler : ICommandHandler<CreateDepartmentCo
         
         _departmentRepository.Add(departmentResult.Value);
         
-        try 
-        {
-            var saveResult = await _transactionManager.SaveChangesAsync(cancellationToken); 
-            if (saveResult.IsFailure) 
-            { 
-                transactionScope.Rollback(); 
-                return saveResult.Error; 
-            } 
-        } 
-        catch (DbUpdateException ex) when 
-            (ex.InnerException is PostgresException postgres && 
-             postgres.SqlState == PostgresErrorCodes.UniqueViolation && 
-             postgres.ConstraintName == "ux_departments_slug") 
-        { 
-            transactionScope.Rollback(); 
-            return Error.Conflict( "department.identifier.taken", 
-                "Отдел с таким идентификатором уже существует"); 
-        }
-
-        var commitResult = transactionScope.Commit();
+        var commitResult = await _transactionManager.CommitTransactionAsync(cancellationToken);
         if (commitResult.IsFailure)
             return commitResult.Error;
         
