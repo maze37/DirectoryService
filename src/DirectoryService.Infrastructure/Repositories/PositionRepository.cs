@@ -58,7 +58,7 @@ public class PositionRepository : IPositionRepository
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (position is null)
-                return GeneralErrors.NotFound(position.Id, "position");
+                return GeneralErrors.NotFound(positionId, "position");
 
             return position;
         }

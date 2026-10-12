@@ -14,7 +14,7 @@ public class GetDepartmentsTreeSearchQueryHandler : IQueryHandler<GetDepartments
         _readDbContext = readDbContext;
     }
 
-    public async Task<IReadOnlyList<DepartmentTreeItemDto>> HandleAsync(
+    public async Task<IReadOnlyList<DepartmentTreeItemDto>?> HandleAsync(
         GetDepartmentsTreeSearchQuery query,
         CancellationToken cancellationToken = default)
     {
