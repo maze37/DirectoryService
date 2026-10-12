@@ -34,7 +34,7 @@ public class DepartmentRepository : IDepartmentRepository
                 .FirstOrDefaultAsync(predicate, cancellationToken);
 
             if (department is null)
-                return GeneralErrors.NotFound(department.Id, "departmentId");
+                return GeneralErrors.NotFound(null, "departmentId");
 
             return department;
         }
@@ -62,7 +62,7 @@ public class DepartmentRepository : IDepartmentRepository
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (department is null)
-                return GeneralErrors.NotFound(department.Id, "department");
+                return GeneralErrors.NotFound(departmentId, "department");
 
             return department;
         }
@@ -203,7 +203,7 @@ public class DepartmentRepository : IDepartmentRepository
                 .FirstOrDefaultAsync(x => x.DepartmentId == departmentId && x.PositionId == positionId, cancellationToken);
             
             if (departmentPosition is null)
-                return GeneralErrors.NotFound(departmentPosition.Id, "departmentPosition");
+                return GeneralErrors.NotFound(null, "departmentPosition");
 
             return departmentPosition;
         }

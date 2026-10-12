@@ -69,7 +69,7 @@ public class LocationRepository : ILocationRepository
                 .FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
 
             if (location is null)
-                return GeneralErrors.NotFound(location.Id, "location");
+                return GeneralErrors.NotFound(id, "location");
 
             return location;
         }
